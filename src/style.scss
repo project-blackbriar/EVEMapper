@@ -1,5 +1,10 @@
+$dark: #1d1d1d;
+$green: #4f9e4f;
+$text-muted: #FFFFFF2;
+$orange: #e28a0d;
 @import '../node_modules/bootstrap/scss/bootstrap';
 @import '../node_modules/bootstrap-vue/src/index';
+
 
 .no-margin {
   margin: 0 0 !important;
@@ -14,7 +19,12 @@
 }
 
 .dark {
-  background-color: rgba($dark, 0.85);
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
+}
+
+.light {
+  background-color: adjust_color($dark, $lightness: 5%) !important;
   color: rgba($white, 0.95);
 }
 
@@ -32,8 +42,18 @@
 }
 
 .card {
-  background-color: adjust_color($dark, $lightness: 20%);
+  background-color: adjust_color($dark, $lightness: 7%);
   color: rgba($white, 0.95);
+
+  .card-footer {
+    border-top-color: $gray-600;
+    border-top-style: dashed;
+  }
+
+  .card-header {
+    border-bottom-color: $gray-600;
+    border-bottom-style: dashed;
+  }
 }
 
 //noinspection CssInvalidPseudoSelector

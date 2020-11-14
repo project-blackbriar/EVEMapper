@@ -1,17 +1,29 @@
 <template>
     <Loading v-if="loading"/>
     <div v-else v-resize:debounce="resetSize">
-        <div class="dark map" @click="resetFocus" @contextmenu.capture.prevent="$refs.menu.open">
+        <div class="map light" @click="resetFocus" @contextmenu.capture.prevent="$refs.menu.open">
             <svg class="lines">
                 <line v-for="connection in mappedConnections" :x1="connection.start.left" :y1="connection.start.top"
                       :x2="connection.end.left" :y2="connection.end.top"
-                      style="stroke:rgba(255, 255, 255, 0.5);stroke-width:4"/>
+                      style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6;z-index: 999" @contextmenu.stop.prevent="() => {
+                          focusedConnection = connection
+                          $refs.connectionMenu.open($event)
+                      }">
+                </line>
+                <line v-if="link" :x1="link.start.left" :y1="link.start.top"
+                      :x2="link.end.left" :y2="link.end.top"
+                      style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6;z-index: 999"></line>
             </svg>
             <MapLocation ref="location" class="selectable" :map-offset-x="mapOffsetX" :map-offset-y="mapOffsetY"
                          v-for="location in map.locations"
-                         :location="location" :key="location.name"></MapLocation>
+                         :location="location" :key="location.name"
+                         @startLink="startLink"
+                         @endLink="endLink"
+            ></MapLocation>
             <ContextMenu ref="menu"
                          :config="[{title: 'System', icon: 'plus', click: () => $bvModal.show('add-system-modal')}]"></ContextMenu>
+            <ContextMenu ref="connectionMenu"
+                         :config="[{title: 'Unlink', endIcon: 'link', click: unlink}]"></ContextMenu>
         </div>
         <b-modal id="add-system-modal" centered title="Add System" @ok="lookup">
             <form ref="form">
@@ -54,7 +66,11 @@
                 loading: false,
                 mapOffsetX: 0,
                 mapOffsetY: 0,
-                name: "Thera"
+                name: "J160941",
+                isLinking: false,
+                startLinkLocation: null,
+                focusedConnection: null,
+                link: null
             };
         },
         computed: {
@@ -93,6 +109,77 @@
             },
             async lookup() {
                 await this.$store.dispatch('addSystem', {name: this.name});
+            },
+            updateLink(event) {
+                const x = event.pageX - this.mapOffsetX;
+                const y = event.pageY - this.mapOffsetY;
+                this.link = {
+                    ...this.link,
+                    end: {
+                        top: y,
+                        left: x
+                    }
+                };
+            },
+            startLink(location) {
+                this.isLinking = true;
+                this.startLinkLocation = location;
+                this.link = {
+                    start: {
+                        top: location.top,
+                        left: location.left
+                    },
+                    end: {
+                        top: location.top,
+                        left: location.left
+                    }
+                };
+                window.addEventListener('mousemove', this.updateLink);
+            },
+            async endLink(location) {
+                if (location.system_id === this.startLinkLocation.system_id) return;
+                if (this.isLinking) {
+                    window.removeEventListener('mousemove', this.updateLink);
+                    this.link = null;
+                    if (this.startLinkLocation.connections.includes(location.system_id)) {
+                        this.$bvToast.toast('Already Linked', {
+                            title: 'Link',
+                            variant: 'warning'
+                        });
+                        return;
+                    }
+                    await this.$store.dispatch('updateLocation', {
+                        location: {
+                            ...this.startLinkLocation,
+                            connections: [...(this.startLinkLocation.connections ?? []), location.system_id]
+                        }
+                    });
+                    await this.$store.dispatch('updateLocation', {
+                        location: {
+                            ...location,
+                            connections: [...(location.connections ?? []), this.startLinkLocation.system_id]
+                        }
+                    });
+                    this.startLinkLocation = false;
+                    this.isLinking = false;
+                }
+            },
+            async unlink() {
+                const startLocation = this.map.locations.find(val => val.system_id === this.focusedConnection.start.system_id);
+                const endLocation = this.map.locations.find(val => val.system_id === this.focusedConnection.end.system_id);
+
+                await this.$store.dispatch('updateLocation', {
+                    location: {
+                        ...startLocation,
+                        connections: startLocation.connections.filter(val => val !== this.focusedConnection.end.system_id)
+                    }
+                });
+                await this.$store.dispatch('updateLocation', {
+                    location: {
+                        ...endLocation,
+                        connections: endLocation.connections.filter(val => val !== this.focusedConnection.start.system_id)
+                    }
+                });
             }
         }
     };

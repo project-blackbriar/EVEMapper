@@ -8,7 +8,10 @@
             @click="close"
             :title="title"
             @contextmenu.capture.prevent>
-        <div class="context-menu-item" @contextmenu.stop v-for="child in config" @click="child.click">
+        <div :class="{
+                'context-menu-item' : true,
+                [child.class] : true
+             }" @contextmenu.stop v-for="child in config" @click="child.click">
             <b-icon :icon="child.icon"/>
             <span> {{child.title}}</span>
             <b-icon class="append" :icon="child.endIcon"/>
@@ -70,6 +73,7 @@
     .lil-context-menu {
         position: fixed;
         z-index: 999;
+        min-width: 150px;
 
 
         .context-menu-item {

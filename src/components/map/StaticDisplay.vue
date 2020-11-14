@@ -23,6 +23,6 @@
 
 <style scoped>
     .static {
-        margin-right: 0.2em;
+
     }
 </style>

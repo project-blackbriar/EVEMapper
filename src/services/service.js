@@ -65,7 +65,6 @@ class Service {
         }));
     }
 
-
     async updateLocation(mapId, location) {
         return (await this.api.put(`/maps/${mapId}/location`, location, {
             params: {

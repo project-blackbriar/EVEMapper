@@ -35,6 +35,7 @@ export default {
             commit('setMap', map);
         },
         async updateLocation({state}, {location}) {
+            console.log(location);
             await service.updateLocation(state.map._id, location);
         },
         async removeLocation({state, commit}, location) {
@@ -52,7 +53,7 @@ export default {
                     return;
                 }
                 const location = await service.getSystem(systemId);
-                //await service.createLocation(rootState.map.map, location);
+                await service.createLocation(rootState.map.map._id, location);
                 VueInstance.$bvToast.toast('Added System', {
                     title: 'System',
                     variant: 'success'
@@ -74,18 +75,23 @@ export default {
             const index = state.map.locations.findIndex(loc => loc.name === location.name);
             Vue.set(state.map.locations, index, location);
         },
-        SOCKET_updatePilot(state, {name, from, to}) {
-            const indexFrom = state.map.locations.findIndex(val => val.system_id === from);
-            const pilots = state.map.locations[indexFrom].pilots?.filter(val => val !== name) ?? [];
-            Vue.set(state.map.locations, indexFrom, {
-                ...state.map.locations[indexFrom],
-                pilots: pilots
+        SOCKET_addPilot(state, {pilot, to}) {
+            state.map.locations.find(val => val.system_id === to).pilots.push(pilot);
+        },
+        SOCKET_removePilot(state, {pilot, from}) {
+            console.log(pilot);
+            console.log(from);
+            const fromIndex = state.map.locations.findIndex(val => val.system_id === from);
+            const pilotIndex = state.map.locations[fromIndex].pilots.findIndex(val => val.name === pilot.name);
+            state.map.locations[fromIndex].pilots.splice(pilotIndex, 1);
+        },
+        SOCKET_updatePilotShip(state, {name, ship}) {
+            const indexFrom = state.map.locations.findIndex(val => val.pilots.findIndex(val => val.name === name) !== -1);
+            const pilotIndex = state.map.locations[indexFrom].pilots.findIndex(val => val.name === name);
+            Vue.set(state.map.locations[indexFrom].pilots, pilotIndex, {
+                ...state.map.locations[indexFrom].pilots[pilotIndex],
+                ship
             });
-            const indexTo = state.map.locations.findIndex(val => val.system_id === to);
-            if (!state.map.locations[indexTo].pilots) {
-                state.map.locations[indexTo].pilots = [];
-            }
-            state.map.locations[indexTo].pilots.push(name);
         },
         SOCKET_updateLocation(state, val) {
             const index = state.map.locations.findIndex(loc => loc.system_id === val.system_id);
@@ -94,10 +100,11 @@ export default {
             }
         },
         SOCKET_addLocation(state, val) {
+            if (!state.map.locations) state.map.locations = [];
             state.map.locations.push(val.system);
         },
         SOCKET_removeLocation(state, val) {
-            state.map.locations = state.map.locations.filter(loc => loc.system_id !== val);
+            state.map.locations = state.map.locations.filter(loc => loc.system_id !== parseInt(val));
         }
     }
 };

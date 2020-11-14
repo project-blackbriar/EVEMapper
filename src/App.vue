@@ -1,5 +1,5 @@
 <template>
-    <div class="dark app">
+    <div class="dark app bg-dark">
         <NavBar></NavBar>
         <div v-if="isLoggedIn" class="container no-margin no-padding">
             <div class="row no-margin no-padding">

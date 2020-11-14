@@ -75,6 +75,7 @@ export default class EveService {
 
 
     async getStructure(structureId) {
+        await this.checkToken();
         try {
             const response = await this.ESI.get(`/universe/structures/${structureId}/`, {
                 params: {
@@ -95,6 +96,7 @@ export default class EveService {
 
 
     async setWayPoint(destination_id, add_to_beginning = false, clear_other_waypoints = true) {
+        await this.checkToken();
         try {
             const response = await this.ESI.post(`/ui/autopilot/waypoint/`, {}, {
                 params: {
