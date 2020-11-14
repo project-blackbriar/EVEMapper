@@ -1,0 +1,44 @@
+@import '../node_modules/bootstrap/scss/bootstrap';
+@import '../node_modules/bootstrap-vue/src/index';
+
+.no-margin {
+  margin: 0 0 !important;
+}
+
+.no-padding {
+  padding: 0 !important;
+}
+
+.profile-img {
+  border-radius: 15px;
+}
+
+.dark {
+  background-color: rgba($dark, 0.85);
+  color: rgba($white, 0.95);
+}
+
+.sidebar-item {
+  color: rgba($white, 0.95);
+}
+
+.red {
+  color: var(--orange) !important;
+}
+
+.lil-context-menu {
+  background-color: adjust_color($dark, $lightness: 30%) !important;
+  color: adjust_color($light, $lightness: 50%) !important;
+}
+
+.card {
+  background-color: adjust_color($dark, $lightness: 20%);
+  color: rgba($white, 0.95);
+}
+
+//noinspection CssInvalidPseudoSelector
+:export {
+  blue: $blue;
+  orange: $orange;
+  red: $red
+}
