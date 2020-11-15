@@ -13,12 +13,34 @@
             </template>
             <template v-slot:children v-if="show['maps'] && !loading['maps']">
                 <MapSideBarItem v-for="map in maps" :map="map" :key="map._id"/>
+                <SideBarItem @click="$bvModal.show('add-map-modal')">
+                    <template v-slot:default>
+                        <b-icon-plus></b-icon-plus>
+                    </template>
+                    <template v-slot:append>
+
+                    </template>
+                </SideBarItem>
             </template>
             <template v-slot:children v-else-if="show['maps']">
                 <Loading></Loading>
             </template>
         </SideBarItem>
-
+        <b-modal id="add-map-modal" centered title="Add Map" @ok="addMap">
+            <form ref="form">
+                <b-form-group
+                        label="Name"
+                        label-for="name-input"
+                        invalid-feedback="Name is required"
+                >
+                    <b-form-input
+                            id="name-input"
+                            v-model="name"
+                            required
+                    ></b-form-input>
+                </b-form-group>
+            </form>
+        </b-modal>
     </div>
 </template>
 
@@ -38,7 +60,8 @@
         data() {
             return {
                 show: {},
-                loading: {}
+                loading: {},
+                name: ""
             };
         },
         methods: {
@@ -57,9 +80,10 @@
             async loadMaps() {
                 this.load('maps', true);
                 await this.$store.dispatch('loadMaps');
-                setTimeout(() => {
-                    this.load('maps', false);
-                }, 1000);
+                this.load('maps', false);
+            },
+            async addMap() {
+
             }
         }
     };

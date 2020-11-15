@@ -35,7 +35,6 @@ export default {
             commit('setMap', map);
         },
         async updateLocation({state}, {location}) {
-            console.log(location);
             await service.updateLocation(state.map._id, location);
         },
         async removeLocation({state, commit}, location) {

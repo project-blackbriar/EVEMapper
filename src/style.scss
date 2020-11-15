@@ -2,6 +2,10 @@ $dark: #1d1d1d;
 $green: #4f9e4f;
 $text-muted: #FFFFFF2;
 $orange: #e28a0d;
+:root {
+  --light-dark: #2a2a2a
+}
+
 @import '../node_modules/bootstrap/scss/bootstrap';
 @import '../node_modules/bootstrap-vue/src/index';
 

@@ -3,22 +3,31 @@
     <div v-else v-resize:debounce="resetSize">
         <div class="map light" @click="resetFocus" @contextmenu.capture.prevent="$refs.menu.open">
             <svg class="lines">
-                <line v-for="connection in mappedConnections" :x1="connection.start.left" :y1="connection.start.top"
-                      :x2="connection.end.left" :y2="connection.end.top"
-                      style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6;z-index: 999" @contextmenu.stop.prevent="() => {
-                          focusedConnection = connection
-                          $refs.connectionMenu.open($event)
-                      }">
+                <line class="moving" v-for="connection in mappedConnections"
+                      :x1="connection.start[connection.startSide].x"
+                      :y1="connection.start[connection.startSide].y"
+                      :x2="connection.end[connection.endSide].x" :y2="connection.end[connection.endSide].y"
+                      style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6" @contextmenu.stop>
                 </line>
+
                 <line v-if="link" :x1="link.start.left" :y1="link.start.top"
                       :x2="link.end.left" :y2="link.end.top"
                       style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6;z-index: 999"></line>
             </svg>
+            <div class="connection-size" v-for="connection in mappedConnections"
+                 :style="`top: ${connection.middle.y - 10}px; left: ${connection.middle.x - 10}px;`"
+                 @contextmenu.stop.prevent="() => {
+                          focusedConnection = connection
+                          $refs.connectionMenu.open($event)
+                      }"
+            >?
+            </div>
             <MapLocation ref="location" class="selectable" :map-offset-x="mapOffsetX" :map-offset-y="mapOffsetY"
                          v-for="location in map.locations"
                          :location="location" :key="location.name"
                          @startLink="startLink"
                          @endLink="endLink"
+                         :el.sync="locationEl[location.system_id]"
             ></MapLocation>
             <ContextMenu ref="menu"
                          :config="[{title: 'System', icon: 'plus', click: () => $bvModal.show('add-system-modal')}]"></ContextMenu>
@@ -63,6 +72,7 @@
         },
         data() {
             return {
+                locationEl: {},
                 loading: false,
                 mapOffsetX: 0,
                 mapOffsetY: 0,
@@ -76,29 +86,65 @@
         computed: {
             ...mapGetters(['map', 'connections']),
             mappedConnections() {
-                return this.loading ? [] : this.connections?.map(connection => {
-                    const start = this.map.locations.find(val => connection.start === val.system_id);
-                    const end = this.map.locations.find(val => connection.end === val.system_id);
-                    if (start && end) {
-                        return {
-                            ...connection,
-                            start,
-                            end
-                        };
-                    }
-                    return undefined;
-                }).filter(val => val);
+                return Object.keys(this.locationEl).length === 0 ? [] : this.connections.map(connection => {
+                    const startEl = this.locationEl[connection.start];
+                    const endEl = this.locationEl[connection.end];
+                    const start = this.getConnectionPositions(startEl);
+                    const end = this.getConnectionPositions(endEl);
+                    const startSide = this.getConnectionSide(startEl, endEl);
+                    const endSide = this.getConnectionSide(endEl, startEl);
+                    return {
+                        start, end, startSide, endSide, middle: {
+                            x: start[startSide].x + (end[endSide].x - start[startSide].x) / 2,
+                            y: start[startSide].y + (end[endSide].y - start[startSide].y) / 2,
+                        }
+                    };
+                });
             }
         },
         async created() {
             this.loading = true;
             await this.$store.dispatch('loadMap', {id: this.id});
-            this.loading = false;
             this.$socket.emit('map', {
                 id: this.id
             });
+            this.loading = false;
         },
         methods: {
+            getConnectionSide(startEl, endEl) {
+                return 'middle';
+            },
+            getConnectionPositions(el) {
+                const rect = el.getBoundingClientRect();
+                const rectOffset = {
+                    width: rect.width,
+                    height: rect.height,
+                    x: rect.x - this.mapOffsetX,
+                    y: rect.y - this.mapOffsetY
+                };
+                return {
+                    top: {
+                        x: rectOffset.x + (rectOffset.width / 2),
+                        y: rectOffset.y
+                    },
+                    bottom: {
+                        x: rectOffset.x + (rectOffset.width / 2),
+                        y: rectOffset.y + rectOffset.height
+                    },
+                    right: {
+                        x: rectOffset.x + rectOffset.width,
+                        y: rectOffset.y + (rectOffset.height / 2)
+                    },
+                    left: {
+                        x: rectOffset.x,
+                        y: rectOffset.y + (rectOffset.height / 2)
+                    },
+                    middle: {
+                        x: rectOffset.x + (rectOffset.width / 2),
+                        y: rectOffset.y + (rectOffset.height / 2)
+                    }
+                };
+            },
             resetSize() {
                 this.mapOffsetX = this.$el.getBoundingClientRect().x;
                 this.mapOffsetY = this.$el.getBoundingClientRect().y;
@@ -137,11 +183,11 @@
                 window.addEventListener('mousemove', this.updateLink);
             },
             async endLink(location) {
-                if (location.system_id === this.startLinkLocation.system_id) return;
                 if (this.isLinking) {
+                    if (location.system_id === this.startLinkLocation.system_id) return;
                     window.removeEventListener('mousemove', this.updateLink);
                     this.link = null;
-                    if (this.startLinkLocation.connections.includes(location.system_id)) {
+                    if (this.startLinkLocation.connections?.includes(location.system_id)) {
                         this.$bvToast.toast('Already Linked', {
                             title: 'Link',
                             variant: 'warning'
@@ -186,6 +232,7 @@
 </script>
 
 <style scoped lang="scss">
+
     .map {
         position: relative;
         height: 80vh;
@@ -197,5 +244,16 @@
             height: 100%;
             width: 100%;
         }
+    }
+
+    .connection-size {
+        position: absolute;
+        background-color: var(--dark);
+        width: 1.5rem;
+        height: 1.5rem;
+        text-align: center;
+        border-radius: 5px;
+        user-select: none;
+        cursor: pointer;
     }
 </style>

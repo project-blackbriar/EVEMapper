@@ -73,6 +73,9 @@
                 required: true
             }
         },
+        mounted() {
+            this.$emit('update:el', this.$el);
+        },
         data() {
             return {
                 isDragging: false,
