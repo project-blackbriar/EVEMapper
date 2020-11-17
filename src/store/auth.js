@@ -25,7 +25,7 @@ export default {
             const auth = {
                 ...state.auth,
                 access_token: token.access_token,
-                tokenExpire: Date.now() + (auth.expires_in - 10) * 1000
+                tokenExpire: Date.now() + (token.expires_in - 10) * 1000
             };
             await commit('setAuth', auth);
             localStorage.setItem('auth', JSON.stringify(auth));
