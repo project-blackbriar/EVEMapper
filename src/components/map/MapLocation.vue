@@ -13,9 +13,9 @@
                     </template>
                 </SecurityDisplay>
                 <div class="names ml-2 mr-2">
-                    <h4 @dblclick="showRename = true" class="move">
-                        {{location.alias ?location.alias : location.name}}</h4>
-                    <h6 class="text-muted" v-if="location.alias !== location.names">{{location.name}}</h6>
+                    <h5 @dblclick="showRename = true" class="move">
+                        {{location.alias ?location.alias : location.name}}</h5>
+                    <span style="font-size: 0.7rem" class="text-muted" v-if="(location.alias !== location.name) && (location.alias)">{{location.name}}</span>
                 </div>
                 <div>
                     <SecurityDisplay :security="st.goes" v-for="st in location.statics" :key="st.code">
@@ -57,7 +57,7 @@
         name: "MapLocation",
         components: {SecurityDisplay, StaticDisplay, ContextMenu, SideBar, SideBarItem},
         computed: {
-            ...mapGetters(['auth'])
+            ...mapGetters(['auth']),
         },
         props: {
             location: {
@@ -179,7 +179,9 @@
             padding: 0 0.3rem
         }
     }
-
+    .card-header {
+        padding: 0.5rem 0.75rem;
+    }
     .header {
         display: flex;
         align-items: center;
