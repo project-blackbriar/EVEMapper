@@ -1,5 +1,5 @@
 <template>
-    <b-card @contextmenu.capture.prevent="$refs.menu.open" @click="$emit('endLink', location)" @mouseup.left="endDrag"
+    <b-card :no-body="!location.pilots || location.pilots.length === 0" @contextmenu.capture.prevent="$refs.menu.open" @click="$emit('endLink', location)" @mouseup.left="endDrag"
             :id="location.name"
             :class="{location : true, in: location.pilots.findIndex(val => val.name === auth.CharacterName) !== -1, moving: !this.isDragging}"
             :style="`top: ${location.top}px; left: ${location.left}px;`">
@@ -9,13 +9,13 @@
                  @mouseup.left="endDrag">
                 <SecurityDisplay :security="location.security">
                     <template v-slot="{securityColor}">
-                        <h5 :style="{color: securityColor}">{{location.security}}</h5>
+                        <h4 :style="{color: securityColor}">{{location.security}}</h4>
                     </template>
                 </SecurityDisplay>
                 <div class="names ml-2 mr-2">
                     <h4 @dblclick="showRename = true" class="move">
                         {{location.alias ?location.alias : location.name}}</h4>
-                    <h6 class="text-muted" v-if="location.alias !== location.names">{{location.name}}</h6>
+                    <h6 class="text-muted" v-if="location.alias && location.alias !== location.name">{{location.name}}</h6>
                 </div>
                 <div>
                     <SecurityDisplay :security="st.goes" v-for="st in location.statics" :key="st.code">
@@ -29,13 +29,13 @@
                 </div>
             </div>
         </template>
-        <table class="pilots">
-            <tr :key="pilot.name" v-for="pilot in location.pilots">
-                <td class="item">{{pilot.name}}</td>
-                <td class="item" style="color: var(--yellow)" v-if="pilot.ship">{{pilot.ship.name}}</td>
-                <td class="item" style="color: var(--orange)" v-if="pilot.ship">{{pilot.ship.type}}</td>
-            </tr>
-        </table>
+            <table class="pilots">
+                <tr :key="pilot.name" v-for="pilot in location.pilots">
+                    <td class="item">{{pilot.name}}</td>
+                    <td class="item" style="color: var(--yellow)" v-if="pilot.ship">{{pilot.ship.name}}</td>
+                    <td class="item" style="color: var(--orange)" v-if="pilot.ship">{{pilot.ship.type}}</td>
+                </tr>
+            </table>
 
         <b-popover :target="location.name" :show.sync="showRename" triggers="manual" placement="top">
             <template #title>Alias</template>
@@ -154,10 +154,19 @@
 </script>
 
 <style scoped lang="scss">
+
+    .card-header {
+        padding: 0.1rem 0.5rem;
+    }
+
+    .card-body {
+        padding: 0.1rem;
+    }
+
     .location {
         position: absolute;
         user-select: none;
-        min-width: 200px;
+        min-width: 8rem;
         border-radius: 0.5rem;
         border: var(--dark) 0.2rem solid;
 
@@ -169,11 +178,12 @@
             border-radius: 0.5rem;
             border: var(--orange) 0.2rem solid;
         }
+
     }
 
     .pilots {
         width: 100%;
-        font-size: 0.7rem;
+        font-size: 0.6rem;
 
         .item {
             padding: 0 0.3rem
@@ -187,6 +197,14 @@
         width: 100%;
         height: 100%;
         cursor: pointer;
+
+        h4 {
+            font-size: 1.1rem;
+        }
+
+        h6 {
+            font-size: 0.75rem;
+        }
 
         .names {
             display: flex;

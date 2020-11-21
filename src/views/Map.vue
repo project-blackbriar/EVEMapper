@@ -2,10 +2,15 @@
     <Loading v-if="loading"/>
     <div v-else v-resize:debounce="resetSize">
         <div class="map light" @click="resetFocus" @contextmenu.capture.prevent="$refs.menu.open">
-            <svg class="lines" v-for="connection in mappedConnections" v-bind:key="connection.pathString">
-                <path class="moving" v-if="connection.pathString"
-                        :d="connection.pathString"
-                        style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6;fill: none;" @contextmenu.stop
+            <svg class="lines" v-for="connection in mappedConnections" :key="`${connection.key}-line`">
+                <path v-if="connection.pathString"
+                      :d="connection.pathString"
+                      pointer-events="visibleStroke"
+                      style="stroke:var(--purple);stroke-width:8;fill: none;" @contextmenu.stop
+                />
+                <path v-if="connection.pathString"
+                      :d="connection.pathString"
+                      style="stroke:var(--orange);stroke-width:4;fill: none;" @contextmenu.stop
                 />
             </svg>
             <svg class="lines">
@@ -13,15 +18,15 @@
                       :x2="link.end.left" :y2="link.end.top"
                       style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6;z-index: 999"></line>
             </svg>
-            <div v-for="connection in mappedConnections" v-bind:key="connection.middle.y">
+            <div v-for="connection in mappedConnections" :key="`${connection.key}-middle`">
                 <div class="connection-size" v-if="connection.middle.y"
-                        :style="`top: ${connection.middle.y - 10}px; left: ${connection.middle.x - 10}px;`"
-                        @contextmenu.stop.prevent="() => {
+                     :style="`top: ${connection.middle.y - 10}px; left: ${connection.middle.x - 10}px;`"
+                     @contextmenu.stop.prevent="() => {
                                 focusedConnection = connection
                                 $refs.connectionMenu.open($event)
                             }"
                 >?
-                </div> 
+                </div>
             </div>
             <MapLocation ref="location" class="selectable" :map-offset-x="mapOffsetX" :map-offset-y="mapOffsetY"
                          v-for="location in map.locations"
@@ -86,15 +91,18 @@
         },
         computed: {
             ...mapGetters(['map', 'connections']),
+            locationElLength() {
+                return Object.keys(this.locationEl).length;
+            },
             mappedConnections() {
-                const bDelta = 150;
+                const bDelta = 75;
                 const bOffsets = {
                     top: {x: 0, y: -bDelta},
                     bottom: {x: 0, y: bDelta},
                     right: {x: bDelta, y: 0},
                     left: {x: -bDelta, y: 0},
                 };
-                return Object.keys(this.locationEl).length === 0 ? [] : this.connections.map(connection => {
+                return this.locationElLength === 0 ? [] : this.connections.map(connection => {
                     const startEl = this.locationEl[connection.start];
                     const endEl = this.locationEl[connection.end];
                     if (endEl == null) {
@@ -111,7 +119,7 @@
                             end: null,
                             middle: {x: null, y: null},
                             pathstring: null,
-                        }
+                        };
                     }
                     const start = this.getConnectionPositions(startEl);
                     const end = this.getConnectionPositions(endEl);
@@ -119,6 +127,7 @@
                     const endSide = this.getConnectionSide(endEl, startEl);
                     const pathString = 'M ' + start[startSide].x + ',' + start[startSide].y + ' C ' + (start[startSide].x + bOffsets[startSide].x) + ',' + (start[startSide].y + bOffsets[startSide].y) + ' ' + (end[endSide].x + bOffsets[endSide].x) + ',' + (end[endSide].y + bOffsets[endSide].y) + ' ' + end[endSide].x + ',' + end[endSide].y;
                     return {
+                        key: `${connection.start}:${connection.end}`,
                         start, end, pathString, middle: {
                             x: start[startSide].x + (end[endSide].x - start[startSide].x) / 2,
                             y: start[startSide].y + (end[endSide].y - start[startSide].y) / 2,
@@ -141,8 +150,8 @@
                 const endRect = endEl.getBoundingClientRect();
                 const dX = endRect.x - startRect.x;
                 const dY = endRect.y - startRect.y;
-                if (dX < dY){
-                    if (Math.abs(dX) < dY){
+                if (dX < dY) {
+                    if (Math.abs(dX) < dY) {
                         return 'bottom';
                     } else return 'left';
                 } else if (dX < Math.abs(dY)) {
@@ -278,6 +287,10 @@
             position: absolute;
             height: 100%;
             width: 100%;
+
+            .path-outer {
+                stroke: red !important;
+            }
         }
     }
 

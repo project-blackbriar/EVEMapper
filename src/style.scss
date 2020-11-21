@@ -2,6 +2,7 @@ $dark: #1d1d1d;
 $green: #4f9e4f;
 $text-muted: #FFFFFF2;
 $orange: #e28a0d;
+$purple: #d747d6;
 :root {
   --light-dark: #2a2a2a
 }
@@ -49,14 +50,12 @@ $orange: #e28a0d;
   background-color: adjust_color($dark, $lightness: 7%);
   color: rgba($white, 0.95);
 
-  .card-footer {
-    border-top-color: $gray-600;
-    border-top-style: dashed;
+  .card-header {
+    border: none;
   }
 
-  .card-header {
-    border-bottom-color: $gray-600;
-    border-bottom-style: dashed;
+  .card-body {
+    border-top: $gray-600 1px dashed;
   }
 }
 
