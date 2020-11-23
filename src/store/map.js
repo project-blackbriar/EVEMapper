@@ -37,7 +37,7 @@ export default {
             const ids = await eveService.getUniverseIds([name]);
             if (ids.systems?.length > 0) {
                 const systemId = ids.systems[0].id;
-                if (rootState.map.map.locations.some(val => val.system_id === systemId)) {
+                if (rootState.map.map.locations?.some(val => val.system_id === systemId)) {
                     VueInstance.$bvToast.toast('System already on Map', {
                         title: 'System',
                         variant: 'warning'
