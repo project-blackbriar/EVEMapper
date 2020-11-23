@@ -28,7 +28,7 @@ export default {
                 tokenExpire: Date.now() + (token.expires_in - 10) * 1000
             };
             await commit('setAuth', auth);
-            localStorage.setItem('auth', JSON.stringify(auth));
+            await localStorage.setItem('auth', JSON.stringify(auth));
         },
         async setActiveMap({commit, state}, map) {
             await service.setActiveMap(map);

@@ -1,5 +1,5 @@
 <template>
-    <b-card
+    <b-card no-body
             v-show="isVisible"
             class="lil-context-menu"
             :style="style"
@@ -12,9 +12,9 @@
                 'context-menu-item' : true,
                 [child.class] : true
              }" @contextmenu.stop v-for="child in config" @click="child.click">
-            <b-icon :icon="child.icon"/>
+            <b-icon v-if="child.icon" :icon="child.icon"/>
             <span> {{child.title}}</span>
-            <b-icon class="append" :icon="child.endIcon"/>
+            <b-icon v-if="child.endIcon" class="append" :icon="child.endIcon"/>
         </div>
     </b-card>
 </template>
@@ -81,9 +81,6 @@
             user-select: none;
             padding: 10px;
             border-radius: 2px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
 
             &:hover {
                 background-color: rgba(0, 0, 0, 0.2);

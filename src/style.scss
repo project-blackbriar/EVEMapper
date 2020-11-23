@@ -3,8 +3,15 @@ $green: #4f9e4f;
 $text-muted: #FFFFFF2;
 $orange: #e28a0d;
 $purple: #d747d6;
+$blue: #428bca;
+body {
+  font-family: 'Arial', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
 :root {
-  --light-dark: #2a2a2a
+
+  --light-dark: #2a2a2a;
+  --path-stroke: rgb(60, 63, 65);
 }
 
 @import '../node_modules/bootstrap/scss/bootstrap';
@@ -42,8 +49,8 @@ $purple: #d747d6;
 }
 
 .lil-context-menu {
-  background-color: adjust_color($dark, $lightness: 30%) !important;
-  color: adjust_color($light, $lightness: 50%) !important;
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
 }
 
 .card {
@@ -58,6 +65,38 @@ $purple: #d747d6;
     border-top: $gray-600 1px dashed;
   }
 }
+
+
+.close {
+  color: rgba($white, 0.95) !important;
+}
+
+.modal-content {
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
+  border-color: adjust_color($dark, $lightness: 7%);
+
+  .custom-select {
+    background-color: $dark !important;
+    color: rgba($white, 0.95);
+    border-color: adjust_color($dark, $lightness: 7%);
+  }
+
+
+}
+
+.modal-header {
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
+  border-bottom: $gray-600 1px dashed;
+}
+
+.modal-footer {
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
+  border-top: $gray-600 1px dashed;
+}
+
 
 //noinspection CssInvalidPseudoSelector
 :export {

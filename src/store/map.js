@@ -2,6 +2,7 @@ import Service from "../services/service";
 import Vue from 'vue';
 import EveService from "../services/eveService";
 import VueInstance from './../main';
+import _ from 'lodash';
 
 const service = new Service();
 const eveService = new EveService();
@@ -14,16 +15,8 @@ export default {
     getters: {
         maps: state => state.maps,
         map: state => state.map,
-        connections: state => state.map?.locations.map(location => {
-            return location.connections?.map(connection => {
-                return {
-                    start: location.system_id,
-                    end: connection
-                };
-            });
-        }).flat().filter(val => val).reduce((a, b) => {
-            return a.findIndex(val => val.end === b.start && val.start === b.end) !== -1 ? a : [...a, b];
-        }, [])
+        connections: state => state.map.connections,
+        pilots: state => _.groupBy(_.orderBy(state.map?.pilots, 'CharacterName'), 'system_id')
     },
     actions: {
         async loadMaps({commit}) {
@@ -51,8 +44,7 @@ export default {
                     });
                     return;
                 }
-                const location = await service.getSystem(systemId);
-                await service.createLocation(rootState.map.map._id, location);
+                await service.createLocation(rootState.map.map._id, systemId);
                 VueInstance.$bvToast.toast('Added System', {
                     title: 'System',
                     variant: 'success'
@@ -61,6 +53,9 @@ export default {
                 title: 'System',
                 variant: 'danger'
             });
+        },
+        async updateConnection({state, rootState}, connection) {
+            await service.updateConnection(rootState.map.map._id, connection);
         }
     },
     mutations: {
@@ -74,36 +69,45 @@ export default {
             const index = state.map.locations.findIndex(loc => loc.name === location.name);
             Vue.set(state.map.locations, index, location);
         },
-        SOCKET_addPilot(state, {pilot, to}) {
-            state.map.locations.find(val => val.system_id === to).pilots.push(pilot);
-        },
-        SOCKET_removePilot(state, {pilot, from}) {
-            console.log(pilot);
-            console.log(from);
-            const fromIndex = state.map.locations.findIndex(val => val.system_id === from);
-            const pilotIndex = state.map.locations[fromIndex].pilots.findIndex(val => val.name === pilot.name);
-            state.map.locations[fromIndex].pilots.splice(pilotIndex, 1);
-        },
-        SOCKET_updatePilotShip(state, {name, ship}) {
-            const indexFrom = state.map.locations.findIndex(val => val.pilots.findIndex(val => val.name === name) !== -1);
-            const pilotIndex = state.map.locations[indexFrom].pilots.findIndex(val => val.name === name);
-            Vue.set(state.map.locations[indexFrom].pilots, pilotIndex, {
-                ...state.map.locations[indexFrom].pilots[pilotIndex],
-                ship
-            });
-        },
-        SOCKET_updateLocation(state, val) {
+        SOCKET_updateSystem(state, val) {
             const index = state.map.locations.findIndex(loc => loc.system_id === val.system_id);
             if (index !== -1) {
                 Vue.set(state.map.locations, index, val);
             }
         },
-        SOCKET_addLocation(state, val) {
+        SOCKET_addSystem(state, val) {
             if (!state.map.locations) state.map.locations = [];
-            state.map.locations.push(val.system);
+            state.map.locations.push(val);
         },
-        SOCKET_removeLocation(state, val) {
+        SOCKET_removeSystem(state, val) {
             state.map.locations = state.map.locations.filter(loc => loc.system_id !== parseInt(val));
+        },
+        SOCKET_addConnection(state, val) {
+            if (!state.map.connections) state.map.connections = [];
+            state.map.connections.push(val);
+        },
+        SOCKET_updateConnection(state, val) {
+            const index = state.map.connections.findIndex(connection => connection.from === val.from && connection.to === val.to);
+            if (index !== -1) {
+                Vue.set(state.map.connections, index, val);
+            }
+        },
+        SOCKET_removeConnection(state, systemId) {
+            state.map.connections = state.map.connections.filter(val => val.from !== systemId || val.to === systemId);
+        },
+        SOCKET_addPilot(state, pilot) {
+            if (!state.map.pilots) state.map.pilots = {};
+            state.map.pilots.push(pilot);
+        },
+        SOCKET_removePilot(state, name) {
+            state.map.pilots = state.map.pilots.filter(pilot => pilot.CharacterName !== name);
+        },
+        SOCKET_setPilotLocation(state, {name, system_id}) {
+            const index = state.map.pilots.findIndex(val => val.CharacterName === name);
+            Vue.set(state.map.pilots, index, {
+                ...state.map.pilots[index],
+                system_id: system_id
+            });
         }
     }
 };

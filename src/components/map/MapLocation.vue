@@ -1,12 +1,15 @@
 <template>
-    <b-card :no-body="!location.pilots || location.pilots.length === 0" @contextmenu.capture.prevent="$refs.menu.open" @click="$emit('endLink', location)" @mouseup.left="endDrag"
+    <b-card :no-body="!(locationPilots && locationPilots.length > 0)" @contextmenu.capture.prevent="$refs.menu.open"
+            @click.left="() => {
+                endDrag()
+                $emit('endLink', location)
+            }"
             :id="location.name"
-            :class="{location : true, in: location.pilots.findIndex(val => val.name === auth.CharacterName) !== -1, moving: !this.isDragging}"
+            :class="{location : true, in:isPilotIn , moving: !isDragging, selected : selected}"
             :style="`top: ${location.top}px; left: ${location.left}px;`">
         <template #header>
             <div class="header"
-                 @mousedown.left="startDrag"
-                 @mouseup.left="endDrag">
+                 @mousedown.left="startDrag">
                 <SecurityDisplay :security="location.security">
                     <template v-slot="{securityColor}">
                         <h4 :style="{color: securityColor}">{{location.security}}</h4>
@@ -15,7 +18,8 @@
                 <div class="names ml-2 mr-2">
                     <h4 @dblclick="showRename = true" class="move">
                         {{location.alias ?location.alias : location.name}}</h4>
-                    <h6 class="text-muted" v-if="location.alias && location.alias !== location.name">{{location.name}}</h6>
+                    <h6 class="text-muted" v-if="location.alias && location.alias !== location.name">
+                        {{location.name}}</h6>
                 </div>
                 <div>
                     <SecurityDisplay :security="st.goes" v-for="st in location.statics" :key="st.code">
@@ -29,13 +33,16 @@
                 </div>
             </div>
         </template>
-            <table class="pilots">
-                <tr :key="pilot.name" v-for="pilot in location.pilots">
-                    <td class="item">{{pilot.name}}</td>
-                    <td class="item" style="color: var(--yellow)" v-if="pilot.ship">{{pilot.ship.name}}</td>
-                    <td class="item" style="color: var(--orange)" v-if="pilot.ship">{{pilot.ship.type}}</td>
-                </tr>
-            </table>
+        <table class="pilots">
+            <tr :key="pilot.CharacterName" v-for="pilot in locationPilots">
+                <td class="item"
+                    :style="{color : pilot.CharacterName === auth.CharacterName ? 'var(--green)' : 'inherit'}">
+                    {{pilot.CharacterName}}
+                </td>
+                <td class="item" style="color: var(--yellow)" v-if="pilot.ship">{{pilot.ship.name}}</td>
+                <td class="item" style="color: var(--orange)" v-if="pilot.ship">{{pilot.ship.type}}</td>
+            </tr>
+        </table>
 
         <b-popover :target="location.name" :show.sync="showRename" triggers="manual" placement="top">
             <template #title>Alias</template>
@@ -57,11 +64,21 @@
         name: "MapLocation",
         components: {SecurityDisplay, StaticDisplay, ContextMenu, SideBar, SideBarItem},
         computed: {
-            ...mapGetters(['auth'])
+            ...mapGetters(['auth', 'pilots']),
+            locationPilots() {
+                return this.pilots[this.location.system_id];
+            },
+            isPilotIn() {
+                return this.locationPilots?.find(val => val.CharacterName === this.auth.CharacterName);
+            }
         },
         props: {
             location: {
                 type: Object,
+                required: true
+            },
+            selected: {
+                type: Boolean,
                 required: true
             },
             mapOffsetX: {
@@ -73,13 +90,11 @@
                 required: true
             }
         },
-        mounted() {
-            this.$emit('update:el', this.$el);
-        },
         data() {
             return {
                 isDragging: false,
                 updated: false,
+                clicked: false,
                 alias: this.location.alias ?? this.location.name,
                 mouseOffsetX: 0,
                 mouseOffsetY: 0,
@@ -99,6 +114,10 @@
         },
         methods: {
             updateLocation(event) {
+                if (!this.isDragging) {
+                    this.isDragging = true;
+                    this.$emit('startDrag');
+                }
                 this.updated = true;
                 const offSetX = this.$el.getBoundingClientRect().x - this.element.getBoundingClientRect().x;
                 const offSetY = this.$el.getBoundingClientRect().y - this.element.getBoundingClientRect().y;
@@ -106,10 +125,39 @@
                 const y = event.pageY - this.mapOffsetY - this.mouseOffsetY + offSetY;
                 if (x <= 0) return;
                 if (y <= 0) return;
+                const rect = this.$el.getBoundingClientRect();
+                const rectOffset = {
+                    width: rect.width,
+                    height: rect.height,
+                    x: rect.x - this.mapOffsetX,
+                    y: rect.y - this.mapOffsetY
+                };
                 const loc = {
                     ...this.location,
                     top: y,
-                    left: x
+                    left: x,
+                    offsets: {
+                        top: {
+                            x: rectOffset.x + (rectOffset.width / 2),
+                            y: rectOffset.y
+                        },
+                        bottom: {
+                            x: rectOffset.x + (rectOffset.width / 2),
+                            y: rectOffset.y + rectOffset.height
+                        },
+                        right: {
+                            x: rectOffset.x + rectOffset.width,
+                            y: rectOffset.y + (rectOffset.height / 2)
+                        },
+                        left: {
+                            x: rectOffset.x,
+                            y: rectOffset.y + (rectOffset.height / 2)
+                        },
+                        middle: {
+                            x: rectOffset.x + (rectOffset.width / 2),
+                            y: rectOffset.y + (rectOffset.height / 2)
+                        }
+                    }
                 };
                 this.$store.commit('updateLocation', {location: loc});
             },
@@ -125,20 +173,21 @@
                 this.showRename = false;
             },
             startDrag(event) {
-                this.isDragging = true;
                 this.mouseOffsetX = event.offsetX;
                 this.mouseOffsetY = event.offsetY;
                 this.element = event.target;
                 window.addEventListener('mousemove', this.updateLocation);
             },
             endDrag() {
-                if (this.isDragging) {
-                    this.isDragging = false;
-                    window.removeEventListener('mousemove', this.updateLocation);
-                    if (this.updated) {
-                        this.updated = false;
-                        this.$store.dispatch('updateLocation', {location: this.location});
-                    }
+                if (!this.isDragging) {
+                    this.$emit('selectThis');
+                }
+                this.isDragging = false;
+                window.removeEventListener('mousemove', this.updateLocation);
+                if (this.updated) {
+                    this.updated = false;
+                    this.$store.dispatch('updateLocation', {location: this.location});
+                    this.$emit('endDrag');
                 }
             },
             resetFocus() {
@@ -156,11 +205,11 @@
 <style scoped lang="scss">
 
     .card-header {
-        padding: 0.1rem 0.5rem;
+        padding: 0.2rem 0.5rem;
     }
 
     .card-body {
-        padding: 0.1rem;
+        padding: 0.2rem;
     }
 
     .location {
@@ -169,14 +218,19 @@
         min-width: 8rem;
         border-radius: 0.5rem;
         border: var(--dark) 0.2rem solid;
+        transition: box-shadow 500ms;
 
         &.moving {
-            transition: top 500ms, left 500ms;
+            transition: top 500ms, left 500ms, box-shadow 200ms;
         }
 
         &.in {
             border-radius: 0.5rem;
             border: var(--orange) 0.2rem solid;
+        }
+
+        &.selected {
+            box-shadow: 0px 0px 5px 2px var(--blue)
         }
 
     }
@@ -200,10 +254,12 @@
 
         h4 {
             font-size: 1.1rem;
+            margin-bottom: 0;
         }
 
         h6 {
-            font-size: 0.75rem;
+            font-size: 0.6rem;
+            margin-bottom: 0;
         }
 
         .names {

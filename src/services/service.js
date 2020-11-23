@@ -9,6 +9,13 @@ class Service {
         });
     }
 
+    async checkToken() {
+        if (store.getters.auth?.tokenExpire <= Date.now()) {
+            await this.refreshToken();
+            console.log('Updated Token');
+        }
+    }
+
     async refreshToken() {
         try {
             const response = (await this.api.get('/auth/refresh', {
@@ -26,6 +33,7 @@ class Service {
     }
 
     async setActiveMap({_id}) {
+        await this.checkToken();
         try {
             return (await this.api.post(`/maps/active/${_id}`, {}, {
                 params: {
@@ -38,6 +46,7 @@ class Service {
     }
 
     async getMaps() {
+        await this.checkToken();
         try {
             return (await this.api.get(`/maps`, {
                 params: {
@@ -50,6 +59,7 @@ class Service {
     }
 
     async getMap(id) {
+        await this.checkToken();
         return (await this.api.get(`/maps/${id}`, {
             params: {
                 token: store.getters.auth.access_token,
@@ -57,8 +67,11 @@ class Service {
         })).data;
     }
 
-    async createLocation(mapId, location) {
-        return (await this.api.post(`/maps/${mapId}/location`, location, {
+    async createLocation(mapId, systemId) {
+        await this.checkToken();
+        return (await this.api.post(`/maps/${mapId}/location`, {
+            system_id: systemId
+        }, {
             params: {
                 token: store.getters.auth.access_token,
             }
@@ -66,6 +79,7 @@ class Service {
     }
 
     async updateLocation(mapId, location) {
+        await this.checkToken();
         return (await this.api.put(`/maps/${mapId}/location`, location, {
             params: {
                 token: store.getters.auth.access_token,
@@ -74,6 +88,7 @@ class Service {
     }
 
     async removeLocation(mapId, location) {
+        await this.checkToken();
         return (await this.api.delete(`/maps/${mapId}/location/${location.system_id}`, {
             params: {
                 token: store.getters.auth.access_token,
@@ -81,8 +96,17 @@ class Service {
         }));
     }
 
+    async updateConnection(mapId, connection){
+        await this.checkToken();
+        return (await this.api.put(`/maps/${mapId}/connection`, connection, {
+            params: {
+                token: store.getters.auth.access_token,
+            }
+        }));
+    }
 
     async setPilotLocation({_id}, {system_id}) {
+        await this.checkToken();
         return (await this.api.post(`/maps/${_id}/pilot/${system_id}`, {}, {
             params: {
                 token: store.getters.auth.access_token,
@@ -91,6 +115,7 @@ class Service {
     }
 
     async getSystem(id) {
+        await this.checkToken();
         try {
             return (await this.api.get(`/systems/${id}`, {
                 params: {
@@ -105,6 +130,7 @@ class Service {
     }
 
     async createSystem(system) {
+        await this.checkToken();
         try {
             return (await this.api.post(`/systems/${system.system_id}`, system, {
                 params: {
