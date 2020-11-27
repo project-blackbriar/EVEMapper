@@ -27,7 +27,6 @@ export class CRON {
         this.statusCron = {
             start: () => {
                 this.interval = setInterval(async () => {
-
                 }, process.env.VUE_APP_EVE_CRON_TIMEOUT);
             },
             stop: () => clearInterval(this.interval)

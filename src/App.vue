@@ -6,7 +6,7 @@
                 <div class="col-lg-2 d-sm-none d-lg-block no-margin no-padding">
                     <SideBar/>
                 </div>
-                <div class="col-lg-10 no-padding">
+                <div class="col-lg-10 no-padding no-margin">
                     <router-view/>
                 </div>
             </div>
@@ -17,7 +17,7 @@
 <style lang="scss">
     .no-margin {
         margin: 0 !important;
-        width: 100vw;
+        width: 98vw;
     }
 
     .app {

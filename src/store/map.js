@@ -10,11 +10,13 @@ const eveService = new EveService();
 export default {
     state: {
         maps: [],
-        map: null
+        map: null,
+        selectedLocation: null,
     },
     getters: {
         maps: state => state.maps,
         map: state => state.map,
+        selectedLocation: state => state.selectedLocation,
         connections: state => state.map.connections,
         pilots: state => _.groupBy(_.orderBy(state.map?.pilots, 'CharacterName'), 'system_id')
     },
@@ -69,10 +71,16 @@ export default {
             const index = state.map.locations.findIndex(loc => loc.name === location.name);
             Vue.set(state.map.locations, index, location);
         },
+        setSelectedLocation(state, location) {
+            state.selectedLocation = location;
+        },
         SOCKET_updateSystem(state, val) {
             const index = state.map.locations.findIndex(loc => loc.system_id === val.system_id);
             if (index !== -1) {
                 Vue.set(state.map.locations, index, val);
+            }
+            if (val.system_id === state.selectedLocation?.system_id) {
+                state.selectedLocation = val;
             }
         },
         SOCKET_addSystem(state, val) {
@@ -81,6 +89,9 @@ export default {
         },
         SOCKET_removeSystem(state, val) {
             state.map.locations = state.map.locations.filter(loc => loc.system_id !== parseInt(val));
+            if (state.selectedLocation?.system_id === parseInt(val)) {
+                state.selectedLocation = null;
+            }
         },
         SOCKET_addConnection(state, val) {
             if (!state.map.connections) state.map.connections = [];

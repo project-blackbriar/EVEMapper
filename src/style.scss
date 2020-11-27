@@ -8,6 +8,7 @@ body {
   font-family: 'Arial', sans-serif !important;
   -webkit-font-smoothing: antialiased;
 }
+
 :root {
 
   --light-dark: #2a2a2a;
@@ -51,6 +52,62 @@ body {
 .lil-context-menu {
   background-color: $dark !important;
   color: rgba($white, 0.95);
+}
+
+.code-size {
+  width: 4rem !important;
+  text-align: center;
+}
+
+.cosmictype-size {
+  width: 7rem !important;
+}
+
+.custom-select {
+  background-color: adjust_color($dark, $lightness: 7%);
+  font-size: 12px;
+  border: none;
+  color: rgba($white, 0.95);
+  padding: 3px 6px;
+}
+
+.b-table {
+  background-color: adjust_color($dark, $lightness: 7%);
+  color: rgba($white, 0.95);
+  font-size: 12px;
+}
+.form-control {
+  background-color: adjust_color($dark, $lightness: 7%);
+  color: rgba($white, 0.95);
+  font-size: 12px;
+  border-color: $dark;
+
+  &:focus {
+    background-color: adjust_color($dark, $lightness: 6%);
+    color: rgba($white, 0.95);
+    border-color: $dark;
+    box-shadow: 0 0 0 0.2rem $dark;
+  }
+}
+
+
+.table-hover tbody tr:hover {
+  color: rgba($white, 0.95);
+  cursor: pointer;
+}
+
+.table thead th {
+  border-top: var(--dark) 1px solid;
+  border-bottom: var(--dark) 2px solid;
+  text-align: center;
+}
+
+.table {
+  justify-content: center;
+}
+
+.table td {
+  border-top: var(--light-dark) 1px solid;
 }
 
 .card {

@@ -46,7 +46,7 @@
             <MapLocation ref="location" class="selectable" :map-offset-x="mapOffsetX" :map-offset-y="mapOffsetY"
                          v-for="location in map.locations"
                          :location="location" :key="location.name"
-                         :selected="selectedLocation.system_id === location.system_id"
+                         :selected="selectedLocation !== null && selectedLocation.system_id === location.system_id"
                          @startLink="startLink"
                          @endLink="endLink"
                          @startDrag="isDragging = true"
@@ -63,8 +63,62 @@
                                {title: 'Unlink', icon: 'link', click: unlink}
                                ]"/>
         </div>
+        <b-container v-if="selectedLocation" class="mw-100 mt-3 m-0">
+            <b-row>
+                <b-col cols="8" class="p-0 pr-1">
+                    <b-card class="w-100">
+                        <template #header>
+                            <div class="d-flex justify-content-between">
+                                <h4>Signatures</h4>
+                                <div>
+                                    <b-input v-model="search" placeholder="Search..."></b-input>
+                                </div>
+                            </div>
+                        </template>
+
+                        <b-table striped :fields="signatureFields" hover small
+                                 :items="filteredSignatures">
+                            <template #cell(percent)="{value}">
+                                <div :style="`border-radius: 50%; width: 10px; height: 10px; background-color: var(--${value.match(new RegExp('100')) ? 'green' : 'red'})`"></div>
+                            </template>
+                            <template #cell(type)="{value, index}">
+                                {{value}}
+                            </template>
+                            <template #cell(name)="{value, index}">
+                                {{value}}
+                            </template>
+                            <template #cell(created)="{value}">
+                                <timeago :datetime="new Date(value)" :auto-update="1"></timeago>
+                            </template>
+                            <template #cell(updated)="{value}">
+                                <timeago :datetime="new Date(value)" :auto-update="1"></timeago>
+                            </template>
+                            <template #cell(options)="{index}">
+                                <b-icon-trash class="delete" @click="deleteSig(index)">Delete</b-icon-trash>
+                            </template>
+                        </b-table>
+                    </b-card>
+                </b-col>
+                <b-col cols="4" class="p-0 pl-1">
+                    <b-card>
+                        <template #header>
+                            <h4>{{selectedLocation.name}}
+                                <a target="_blank" :href="`https://evemaps.dotlan.net/system/${selectedLocation.name}`"  v-b-tooltip.hover title="dotlan">
+                                    <img
+                                            class="ml-1 mr-1 icon-hover"
+                                            style="height: 20px; width:20px"
+                                            src="../assets/logo_dotlan.png"/></a>
+                                <a target="_blank" :href="`https://anoik.is/systems/${selectedLocation.name}`"   v-b-tooltip.hover title="Anoik.is">
+                                    <img class="ml-1 mr-1 icon-hover"
+                                         style="height: 20px; width:20px"
+                                         src="../assets/logo_anoik.png"/></a></h4>
+                        </template>
+                    </b-card>
+                </b-col>
+            </b-row>
+        </b-container>
         <b-modal id="add-system-modal" centered title="Add System" @ok="lookup">
-            <form ref="form">
+            <form ref="form" @submit.prevent>
                 <b-form-group
                         label="Name"
                         label-for="name-input"
@@ -74,6 +128,7 @@
                             id="name-input"
                             v-model="name"
                             required
+                            @keydown.enter="lookup"
                     ></b-form-input>
                 </b-form-group>
             </form>
@@ -117,10 +172,12 @@
     import Loading from "../components/Loading";
     import resize from 'vue-resize-directive';
     import ContextMenu from "../components/ContextMenu";
+    import SigPaster from "../mixins/SigPaster";
 
     export default {
         name: "Map",
         components: {ContextMenu, Loading, MapLocation},
+        mixins: [SigPaster],
         directives: {
             resize,
         },
@@ -131,6 +188,7 @@
         },
         data() {
             return {
+                search: "",
                 isDragging: false,
                 loading: false,
                 overConnection: {},
@@ -139,25 +197,57 @@
                 name: "J160941",
                 isLinking: false,
                 startLinkLocation: null,
-                selectedLocation: {},
                 focusedConnection: {
                     status: 0,
                     size: "?"
                 },
                 mappedConnections: [],
                 link: null,
+                sigGroup: [
+                    "Ore Site", "Combat Site", 'Data Site', 'Relic Site', 'Gas Site', 'Wormhole'
+                ],
+                signatureFields: [
+                    {
+                        key: 'percent',
+                        label: "",
+                        tdClass: "d-flex align-items-center justify-content-center"
+                    },
+                    {
+                        key: 'code',
+                        tdClass: 'code-size'
+                    }, 'type', 'name', {
+                        key: 'created',
+                        tdClass: 'text-center'
+                    }, {
+                        key: 'updated',
+                        tdClass: 'text-center'
+                    }, {
+                        key: 'options',
+                        label: "",
+                        tdClass: 'text-center'
+                    }
+                ]
             };
         },
         computed: {
-            ...mapGetters(['map', 'connections']),
+            ...mapGetters(['map', 'connections', 'selectedLocation']),
+            filteredSignatures() {
+                if (this.search !== "") {
+                    return this.selectedLocation.signatures.filter(val => val.code.search(new RegExp(this.search, "i")) !== -1);
+                } else return this.selectedLocation.signatures;
+            }
         },
         async created() {
+            window.addEventListener('paste', this.handlePaste);
             this.loading = true;
             await this.$store.dispatch('loadMap', {id: this.id});
             this.$socket.emit('map', {
                 id: this.id
             });
             this.loading = false;
+        },
+        async beforeDestroy() {
+            window.removeEventListener('paste', this.handlePaste);
         },
         watch: {
             async 'map.locations'() {
@@ -180,8 +270,13 @@
             }
         },
         methods: {
+            saveSelectedLocation() {
+                this.$store.dispatch("updateLocation", {
+                    location: this.selectedLocation
+                });
+            },
             selectLocation(location) {
-                this.selectedLocation = location;
+                this.$store.commit('setSelectedLocation', location);
             },
             outerConnectionStyle(connection) {
                 return {
@@ -422,9 +517,27 @@
         }
     }
 
+    .icon-hover {
+        cursor: pointer;
+        transition: transform 50ms;
+
+        &:hover {
+            transform: scale(1.1);
+        }
+    }
+
     .path {
         transition: stroke 150ms ease-in-out;
         cursor: pointer;
+    }
+
+
+    .delete {
+        color: var(--red);
+
+        &:hover {
+            color: red
+        }
     }
 
     .connection-size {
@@ -437,4 +550,6 @@
         user-select: none;
         cursor: pointer;
     }
+
+
 </style>

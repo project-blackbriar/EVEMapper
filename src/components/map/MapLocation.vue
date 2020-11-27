@@ -46,7 +46,7 @@
 
         <b-popover :target="location.name" :show.sync="showRename" triggers="manual" placement="top">
             <template #title>Alias</template>
-            <b-input name="alias" v-model="alias" @keyup.enter="rename"/>
+            <b-input name="alias" v-model="alias" @keyup.enter.prevent="rename"/>
         </b-popover>
         <ContextMenu ref="menu" :config="contextConfig"/>
     </b-card>
@@ -125,39 +125,10 @@
                 const y = event.pageY - this.mapOffsetY - this.mouseOffsetY + offSetY;
                 if (x <= 0) return;
                 if (y <= 0) return;
-                const rect = this.$el.getBoundingClientRect();
-                const rectOffset = {
-                    width: rect.width,
-                    height: rect.height,
-                    x: rect.x - this.mapOffsetX,
-                    y: rect.y - this.mapOffsetY
-                };
                 const loc = {
                     ...this.location,
                     top: y,
-                    left: x,
-                    offsets: {
-                        top: {
-                            x: rectOffset.x + (rectOffset.width / 2),
-                            y: rectOffset.y
-                        },
-                        bottom: {
-                            x: rectOffset.x + (rectOffset.width / 2),
-                            y: rectOffset.y + rectOffset.height
-                        },
-                        right: {
-                            x: rectOffset.x + rectOffset.width,
-                            y: rectOffset.y + (rectOffset.height / 2)
-                        },
-                        left: {
-                            x: rectOffset.x,
-                            y: rectOffset.y + (rectOffset.height / 2)
-                        },
-                        middle: {
-                            x: rectOffset.x + (rectOffset.width / 2),
-                            y: rectOffset.y + (rectOffset.height / 2)
-                        }
-                    }
+                    left: x
                 };
                 this.$store.commit('updateLocation', {location: loc});
             },
