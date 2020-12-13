@@ -39,7 +39,7 @@
                     :style="{color : pilot.CharacterName === auth.CharacterName ? 'var(--green)' : 'inherit'}">
                     {{pilot.CharacterName}}
                 </td>
-                <td class="item" style="color: var(--yellow)" v-if="pilot.ship">{{pilot.ship.name}}</td>
+                <td class="item" style="color: var(--yellow)" v-if="pilot.ship">{{pilot.ship.ship_name}}</td>
                 <td class="item" style="color: var(--orange)" v-if="pilot.ship">{{pilot.ship.type}}</td>
             </tr>
         </table>

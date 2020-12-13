@@ -104,7 +104,7 @@ export default {
             }
         },
         SOCKET_removeConnection(state, systemId) {
-            state.map.connections = state.map.connections.filter(val => val.from !== systemId || val.to === systemId);
+            state.map.connections = state.map.connections.filter(val => val.from !== parseInt(systemId) && val.to !== parseInt(systemId));
         },
         SOCKET_addPilot(state, pilot) {
             if (!state.map.pilots) state.map.pilots = {};
@@ -112,6 +112,13 @@ export default {
         },
         SOCKET_removePilot(state, name) {
             state.map.pilots = state.map.pilots.filter(pilot => pilot.CharacterName !== name);
+        },
+        SOCKET_setPilotShip(state, {name, ship}) {
+            const index = state.map.pilots.findIndex(val => val.CharacterName === name);
+            Vue.set(state.map.pilots, index, {
+                ...state.map.pilots[index],
+                ship: ship
+            });
         },
         SOCKET_setPilotLocation(state, {name, system_id}) {
             const index = state.map.pilots.findIndex(val => val.CharacterName === name);

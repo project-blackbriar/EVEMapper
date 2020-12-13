@@ -103,12 +103,14 @@
                     <b-card>
                         <template #header>
                             <h4>{{selectedLocation.name}}
-                                <a target="_blank" :href="`https://evemaps.dotlan.net/system/${selectedLocation.name}`"  v-b-tooltip.hover title="dotlan">
+                                <a target="_blank" :href="`https://evemaps.dotlan.net/system/${selectedLocation.name}`"
+                                   v-b-tooltip.hover title="dotlan">
                                     <img
                                             class="ml-1 mr-1 icon-hover"
                                             style="height: 20px; width:20px"
                                             src="../assets/logo_dotlan.png"/></a>
-                                <a target="_blank" :href="`https://anoik.is/systems/${selectedLocation.name}`"   v-b-tooltip.hover title="Anoik.is">
+                                <a target="_blank" :href="`https://anoik.is/systems/${selectedLocation.name}`"
+                                   v-b-tooltip.hover title="Anoik.is">
                                     <img class="ml-1 mr-1 icon-hover"
                                          style="height: 20px; width:20px"
                                          src="../assets/logo_anoik.png"/></a></h4>
