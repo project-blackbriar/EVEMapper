@@ -56,13 +56,12 @@
     import SideBarItem from "../SideBarItem";
     import SideBar from "../SideBar";
     import ContextMenu from "../ContextMenu";
-    import StaticDisplay from "./StaticDisplay";
     import SecurityDisplay from "./SecurityDisplay";
     import {mapGetters} from "vuex";
 
     export default {
         name: "MapLocation",
-        components: {SecurityDisplay, StaticDisplay, ContextMenu, SideBar, SideBarItem},
+        components: {SecurityDisplay, ContextMenu, SideBar, SideBarItem},
         computed: {
             ...mapGetters(['auth', 'pilots']),
             locationPilots() {

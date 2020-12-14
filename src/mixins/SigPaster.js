@@ -39,6 +39,7 @@ export default {
                             }
                         }
                     });
+                    this.selectedLocation.signatures = _.sortBy(this.selectedLocation.signatures, ['code']);
                     await this.$store.dispatch("updateLocation", {
                         location: this.selectedLocation
                     });

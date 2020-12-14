@@ -16,7 +16,7 @@ export default {
         async storeAuth({commit, store}, {auth}) {
             auth = {
                 ...auth,
-                tokenExpire: Date.now() + (auth.expires_in - 10) * 1000
+                tokenExpire: Date.now() + 5 * 1000// + (auth.expires_in - 10) * 1000
             };
             await commit('setAuth', auth);
             localStorage.setItem('auth', JSON.stringify(auth));

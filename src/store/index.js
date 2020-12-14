@@ -3,6 +3,7 @@ import Vuex from 'vuex';
 import map from "./map";
 import auth from "./auth";
 import location from "./location";
+import user from "./user";
 
 Vue.use(Vuex);
 
@@ -13,6 +14,7 @@ export default new Vuex.Store({
     modules: {
         map,
         auth,
-        location
+        location,
+        user
     }
 });

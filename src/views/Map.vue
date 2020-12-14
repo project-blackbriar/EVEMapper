@@ -76,8 +76,11 @@
                             </div>
                         </template>
 
-                        <b-table striped :fields="signatureFields" hover small
-                                 :items="filteredSignatures">
+                        <b-table
+                                :sort-by.sync="sortBy"
+                                :sort-desc.sync="sortDesc"
+                                striped :fields="signatureFields" hover small
+                                :items="filteredSignatures">
                             <template #cell(percent)="{value}">
                                 <div :style="`border-radius: 50%; width: 10px; height: 10px; background-color: var(--${value.match(new RegExp('100')) ? 'green' : 'red'})`"></div>
                             </template>
@@ -116,6 +119,41 @@
                                          src="../assets/logo_anoik.png"/></a></h4>
                         </template>
                     </b-card>
+                    <b-card class="mt-3">
+                        <template #header>
+                            <h4>Routes
+                                <a class="green float-right ml-2" @click.prevent="$bvModal.show('add-route-modal')"
+                                   href="#"
+                                   v-b-tooltip.hover title="Add">
+                                    <b-icon-plus-circle class="icon-hover"></b-icon-plus-circle>
+                                </a>
+                            </h4>
+                        </template>
+                        <b-container>
+                            <b-table
+                                    striped :fields="routeFields" hover small
+                                    :items="routes">
+                                <template #cell(systems)="{value}">
+                                    <div v-if="typeof value === 'string'">No Route Found</div>
+                                    <Security v-else :security="system.security_status" :key="system.system_id"
+                                              v-for="system in value">
+                                        <template v-slot="{securityColor}">
+                                            <a v-b-tooltip.hover
+                                               :title="system.name + ' (' + Math.floor(system.security_status * 10) / 10 +')'">
+                                                <b-icon-square-fill v-if="system.type === 'K'" :style="{color: securityColor}"
+                                                                    class="ml-1"></b-icon-square-fill>
+                                                <b-icon-plus-circle-fill v-else :style="{color: securityColor}"
+                                                                    class="ml-1"></b-icon-plus-circle-fill>
+                                            </a>
+                                        </template>
+                                    </Security>
+                                </template>
+                                <template #cell(options)="{index}">
+                                    <b-icon-trash class="delete" @click="removeRoute(index)">Delete</b-icon-trash>
+                                </template>
+                            </b-table>
+                        </b-container>
+                    </b-card>
                 </b-col>
             </b-row>
         </b-container>
@@ -132,6 +170,33 @@
                             required
                             @keydown.enter="lookup"
                     ></b-form-input>
+                </b-form-group>
+            </form>
+        </b-modal>
+        <b-modal id="add-route-modal" centered title="Add System" @ok="addRoute">
+            <form ref="form" @submit.prevent>
+                <b-form-group
+                        label="Name"
+                        label-for="name-input"
+                        invalid-feedback="Name is required"
+                >
+                    <b-form-input
+                            id="name-input"
+                            v-model="routeName"
+                            required
+                            @keydown.enter="addRoute"
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group
+                        label="Flag"
+                        label-for="name-input"
+                        invalid-feedback="Flag is required"
+                >
+                    <b-select v-model="routeFlag">
+                        <b-select-option value="shortest">Shortest</b-select-option>
+                        <b-select-option value="secure">Secure</b-select-option>
+                        <b-select-option value="insecure">Insecure</b-select-option>
+                    </b-select>
                 </b-form-group>
             </form>
         </b-modal>
@@ -175,10 +240,12 @@
     import resize from 'vue-resize-directive';
     import ContextMenu from "../components/ContextMenu";
     import SigPaster from "../mixins/SigPaster";
+    import SecurityDisplay from "../components/map/SecurityDisplay";
+    import Security from "../components/map/Security";
 
     export default {
         name: "Map",
-        components: {ContextMenu, Loading, MapLocation},
+        components: {Security, SecurityDisplay, ContextMenu, Loading, MapLocation},
         mixins: [SigPaster],
         directives: {
             resize,
@@ -190,6 +257,8 @@
         },
         data() {
             return {
+                sortBy: 'code',
+                sortDesc: false,
                 search: "",
                 isDragging: false,
                 loading: false,
@@ -197,6 +266,8 @@
                 mapOffsetX: 0,
                 mapOffsetY: 0,
                 name: "J160941",
+                routeName: "J160941",
+                routeFlag: "shortest",
                 isLinking: false,
                 startLinkLocation: null,
                 focusedConnection: {
@@ -208,6 +279,26 @@
                 sigGroup: [
                     "Ore Site", "Combat Site", 'Data Site', 'Relic Site', 'Gas Site', 'Wormhole'
                 ],
+                routeFields: [
+                    {
+                        key: 'destination.name',
+                        label: "Destination",
+                        tdClass: "d-flex align-items-center justify-content-center"
+                    }
+                    , {
+                        key: 'flag',
+                        label: "Flag",
+                        tdClass: "text-capitalize"
+                    }, {
+                        key: 'systems',
+                        label: "Route",
+                    },
+                    {
+                        key: 'options',
+                        label: "",
+                        tdClass: "d-flex align-items-center justify-content-center"
+                    }
+                ],
                 signatureFields: [
                     {
                         key: 'percent',
@@ -216,13 +307,26 @@
                     },
                     {
                         key: 'code',
-                        tdClass: 'code-size'
-                    }, 'type', 'name', {
+                        tdClass: 'code-size',
+                        sortable: true
+                    },
+                    {
+                        key: 'type',
+                        tdClass: 'text-center',
+                        sortable: true
+                    },
+                    {
+                        key: 'name',
+                        tdClass: 'text-center',
+                        sortable: true
+                    }, {
                         key: 'created',
-                        tdClass: 'text-center'
+                        tdClass: 'text-center',
+                        sortable: true
                     }, {
                         key: 'updated',
-                        tdClass: 'text-center'
+                        tdClass: 'text-center',
+                        sortable: true
                     }, {
                         key: 'options',
                         label: "",
@@ -232,7 +336,7 @@
             };
         },
         computed: {
-            ...mapGetters(['map', 'connections', 'selectedLocation']),
+            ...mapGetters(['map', 'connections', 'selectedLocation', 'routes']),
             filteredSignatures() {
                 if (this.search !== "") {
                     return this.selectedLocation.signatures.filter(val => val.code.search(new RegExp(this.search, "i")) !== -1);
@@ -241,6 +345,7 @@
         },
         async created() {
             window.addEventListener('paste', this.handlePaste);
+            window.addEventListener('scroll', this.resetSize);
             this.loading = true;
             await this.$store.dispatch('loadMap', {id: this.id});
             this.$socket.emit('map', {
@@ -250,8 +355,12 @@
         },
         async beforeDestroy() {
             window.removeEventListener('paste', this.handlePaste);
+            window.removeEventListener('scroll', this.resetSize);
         },
         watch: {
+            async 'selectedLocation'() {
+                await this.$store.dispatch('getRoutes', {origin: this.selectedLocation.system_id});
+            },
             async 'map.locations'() {
                 if (!this.isDragging) {
                     const interval = setInterval(async () => {
@@ -276,6 +385,15 @@
                 this.$store.dispatch("updateLocation", {
                     location: this.selectedLocation
                 });
+            },
+            async removeRoute(index) {
+                const route = this.routes[index];
+                await this.$store.dispatch('removeRoute', {name: route.destination.system_id, flag: route.flag});
+                await this.$store.dispatch('getRoutes', {origin: this.selectedLocation.system_id});
+            },
+            async addRoute() {
+                await this.$store.dispatch('addRoute', {name: this.routeName, flag: this.routeFlag});
+                await this.$store.dispatch('getRoutes', {origin: this.selectedLocation.system_id});
             },
             selectLocation(location) {
                 this.$store.commit('setSelectedLocation', location);
@@ -388,24 +506,24 @@
                 };
                 return {
                     top: {
-                        x: rectOffset.x + (rectOffset.width / 2),
-                        y: rectOffset.y
+                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX,
+                        y: rectOffset.y + window.scrollY
                     },
                     bottom: {
-                        x: rectOffset.x + (rectOffset.width / 2),
-                        y: rectOffset.y + rectOffset.height
+                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX,
+                        y: rectOffset.y + rectOffset.height + window.scrollY
                     },
                     right: {
-                        x: rectOffset.x + rectOffset.width,
-                        y: rectOffset.y + (rectOffset.height / 2)
+                        x: rectOffset.x + rectOffset.width + window.scrollX,
+                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY
                     },
                     left: {
-                        x: rectOffset.x,
-                        y: rectOffset.y + (rectOffset.height / 2)
+                        x: rectOffset.x + window.scrollX,
+                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY
                     },
                     middle: {
-                        x: rectOffset.x + (rectOffset.width / 2),
-                        y: rectOffset.y + (rectOffset.height / 2)
+                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX,
+                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY
                     }
                 };
             },
@@ -414,9 +532,9 @@
                     this.isDragging = false;
                 }
             },
-            resetSize() {
-                this.mapOffsetX = this.$el.getBoundingClientRect().x;
-                this.mapOffsetY = this.$el.getBoundingClientRect().y;
+            resetSize(event) {
+                this.mapOffsetX = this.$el.getBoundingClientRect().x + window.scrollX;
+                this.mapOffsetY = this.$el.getBoundingClientRect().y + window.scrollY;
             },
             resetFocus() {
                 this.$refs.location?.forEach(el => el.resetFocus());

@@ -50,8 +50,8 @@
         },
         methods: {
             open(evt, userData) {
-                this.x = evt.pageX || evt.clientX;
-                this.y = evt.pageY || evt.clientY;
+                this.x = (evt.pageX || evt.clientX) - window.scrollX;
+                this.y = (evt.pageY || evt.clientY) - window.scrollY;
                 this.userData = userData;
                 Vue.nextTick(() => this.$el.focus());
             },

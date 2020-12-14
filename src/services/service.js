@@ -96,7 +96,7 @@ class Service {
         }));
     }
 
-    async updateConnection(mapId, connection){
+    async updateConnection(mapId, connection) {
         await this.checkToken();
         return (await this.api.put(`/maps/${mapId}/connection`, connection, {
             params: {
@@ -140,6 +140,48 @@ class Service {
         } catch (ex) {
             console.log(ex);
             return system;
+        }
+    }
+
+    async addRoute(destination, flag) {
+        await this.checkToken();
+        try {
+            return (await this.api.post(`/users/route/`, {
+                destination, flag
+            }, {
+                params: {
+                    token: store.getters.auth.access_token,
+                }
+            })).data;
+        } catch (ex) {
+            console.log(ex);
+        }
+    }
+
+    async getRoutes(mapId, origin) {
+        await this.checkToken();
+        try {
+            return (await this.api.get(`/maps/${mapId}/routes/${origin}`, {
+                params: {
+                    token: store.getters.auth.access_token,
+                }
+            })).data;
+        } catch (ex) {
+            console.log(ex);
+            return [];
+        }
+    }
+
+    async removeRoute(destination, flag) {
+        await this.checkToken();
+        try {
+            return (await this.api.delete(`/users/route/${destination}/${flag}`, {
+                params: {
+                    token: store.getters.auth.access_token,
+                }
+            }));
+        } catch (ex) {
+            console.log(ex);
         }
     }
 
