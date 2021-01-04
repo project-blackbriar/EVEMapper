@@ -20,6 +20,7 @@ class Service {
         try {
             const response = (await this.api.get('/auth/refresh', {
                 params: {
+                    CharacterID: store.getters.auth.CharacterID,
                     token: store.getters.auth.access_token,
                 }
             }));
