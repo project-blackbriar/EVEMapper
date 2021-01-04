@@ -62,6 +62,10 @@
                              {title: 'Size', endIcon: 'size', click: () => $bvModal.show('set-connection-size-modal')},
                                {title: 'Unlink', icon: 'link', click: unlink}
                                ]"/>
+            <ContextMenu ref="leadsToMenu"
+                         :config="[
+                             {title: 'Leads to', endIcon: 'status', click: () => $bvModal.show('set-leadsto-system-modal')},
+                               ]"/>
         </div>
         <b-container v-if="selectedLocation" class="mw-100 mt-3 m-0">
             <b-row>
@@ -89,6 +93,14 @@
                             </template>
                             <template #cell(name)="{value, index}">
                                 {{value}}
+                            </template>
+                            <template #cell(leads)="row">
+                                <div @contextmenu.stop.prevent="() => {
+                                    focusedSignature = row.item
+                                    $refs.leadsToMenu.open($event)
+                                    }">
+                                    {{row.item.type == 'Wormhole' ? systemName(row.item.leads) || '--------' : ''}}
+                                </div>
                             </template>
                             <template #cell(created)="{value}">
                                 <timeago :datetime="new Date(value)" :auto-update="1"></timeago>
@@ -230,6 +242,18 @@
                 </b-form-group>
             </form>
         </b-modal>
+        <b-modal id="set-leadsto-system-modal" centered title="Leads To:" @ok="setLeadsToSystem">
+            <form ref="form">
+                <b-form-group
+                        label="Connection"
+                        invalid-feedback="Connection is required"
+                >
+                    <b-select v-if="selectedLocation" v-model="focusedSignature.leads">
+                        <b-select-option v-for="connection in connectionsToID(selectedLocation.system_id)" :value="connection" :key="connection">{{systemName(connection)}}</b-select-option>
+                    </b-select>
+                </b-form-group>
+            </form>
+        </b-modal>
     </div>
 </template>
 
@@ -274,6 +298,7 @@
                     status: 0,
                     size: "?"
                 },
+                focusedSignature: {},
                 mappedConnections: [],
                 link: null,
                 sigGroup: [
@@ -304,19 +329,21 @@
                         key: 'percent',
                         label: "",
                         tdClass: "d-flex align-items-center justify-content-center"
-                    },
-                    {
+                    }, {
                         key: 'code',
                         tdClass: 'code-size',
                         sortable: true
-                    },
-                    {
+                    }, {
                         key: 'type',
                         tdClass: 'text-center',
                         sortable: true
-                    },
-                    {
+                    }, {
                         key: 'name',
+                        tdClass: 'text-center',
+                        sortable: true
+                    }, {
+                        key: 'leads',
+                        label: 'Leads to:',
                         tdClass: 'text-center',
                         sortable: true
                     }, {
@@ -381,6 +408,20 @@
             }
         },
         methods: {
+            connectionsToID(id) {
+                return this.connections.filter(conn => conn.from == id || conn.to == id).map(connection => {
+                    return connection.to == id ? connection.from : connection.to
+                })
+            },
+            systemName(id) {
+                const loc = this.map.locations.find(loc => loc.system_id == id)
+                return loc ? loc.alias || loc.name : null
+            },
+            setLeadsToSystem() {
+                const idx = this.selectedLocation.signatures.findIndex(sig => sig.code === this.focusedSignature.code)
+                this.selectedLocation.signatures[idx] = this.focusedSignature
+                this.saveSelectedLocation()
+            },
             saveSelectedLocation() {
                 this.$store.dispatch("updateLocation", {
                     location: this.selectedLocation
