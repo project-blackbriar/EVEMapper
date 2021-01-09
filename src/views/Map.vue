@@ -386,7 +386,10 @@
         },
         watch: {
             async 'selectedLocation'() {
-                await this.$store.dispatch('getRoutes', {origin: this.selectedLocation.system_id});
+                // Getting cant read property system_id of null
+                if (this.selectedLocation){
+                    await this.$store.dispatch('getRoutes', {origin: this.selectedLocation.system_id});
+                }
             },
             async 'map.locations'() {
                 if (!this.isDragging) {
