@@ -3,10 +3,10 @@
         <NavBar></NavBar>
         <div v-if="isLoggedIn" class="container no-margin no-padding">
             <div class="row no-margin no-padding">
-                <div class="col-lg-2 d-sm-none d-lg-block no-margin no-padding">
+                <div class="col-lg-1 d-sm-none d-lg-block no-margin no-padding">
                     <SideBar/>
                 </div>
-                <div class="col-lg-10 no-padding no-margin">
+                <div class="col-lg-11 no-padding no-margin">
                     <router-view/>
                 </div>
             </div>

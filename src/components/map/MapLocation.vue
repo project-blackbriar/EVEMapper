@@ -223,7 +223,7 @@
         cursor: pointer;
 
         h4 {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             margin-bottom: 0;
         }
 
