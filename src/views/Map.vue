@@ -478,6 +478,8 @@
                 this.$store.dispatch('updateConnection', {
                     ...this.focusedConnection,
                 });
+                const idx = this.mappedConnections.findIndex(conn => conn.key == this.focusedConnection.key)
+                this.mappedConnections[idx].size = this.focusedConnection.size
             },
             setConnectionStatus() {
                 this.$store.dispatch('updateConnection', {
