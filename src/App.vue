@@ -11,6 +11,11 @@
                 </div>
             </div>
         </div>
+        <div v-else>
+            <br>
+            <br>
+            <h1 style="text-align: center;">Please Log In ----></h1>
+        </div>
     </div>
 </template>
 
