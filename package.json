@@ -1,6 +1,6 @@
 {
-  "name": "eve-map-poc",
-  "version": "0.1.0",
+  "name": "Artemis v0.2 alpha",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
