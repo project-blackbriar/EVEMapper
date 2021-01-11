@@ -85,6 +85,10 @@
             async addMap() {
 
             }
+        },
+        mounted() {
+            this.loadMaps()
+            this.toggle('maps')
         }
     };
 </script>
