@@ -63,7 +63,7 @@
         name: "MapLocation",
         components: {SecurityDisplay, ContextMenu, SideBar, SideBarItem},
         computed: {
-            ...mapGetters(['auth', 'pilots']),
+            ...mapGetters(['auth', 'pilots', 'mapScroll']),
             locationPilots() {
                 return this.pilots[this.location.system_id];
             },
@@ -120,8 +120,8 @@
                 this.updated = true;
                 const offSetX = this.$el.getBoundingClientRect().x - this.element.getBoundingClientRect().x;
                 const offSetY = this.$el.getBoundingClientRect().y - this.element.getBoundingClientRect().y;
-                const x = event.pageX - this.mapOffsetX - this.mouseOffsetX + offSetX;
-                const y = event.pageY - this.mapOffsetY - this.mouseOffsetY + offSetY;
+                const x = event.pageX - this.mapOffsetX - this.mouseOffsetX + offSetX + this.mapScroll.left;
+                const y = event.pageY - this.mapOffsetY - this.mouseOffsetY + offSetY + this.mapScroll.top;
                 if (x <= 0) return;
                 if (y <= 0) return;
                 const loc = {

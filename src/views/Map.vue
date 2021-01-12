@@ -1,7 +1,7 @@
 <template>
     <Loading v-if="loading"/>
     <div v-else v-resize:debounce="resetSize">
-        <div class="map light" @click="resetFocus" @contextmenu.capture.prevent="$refs.menu.open">
+        <div id="map" class="map light" @click="resetFocus" @contextmenu.capture.prevent="$refs.menu.open">
             <svg class="lines" v-for="connection in mappedConnections" :key="`${connection.key}-line`"
                  pointer-events="visible"
             >
@@ -363,7 +363,7 @@
             };
         },
         computed: {
-            ...mapGetters(['map', 'connections', 'selectedLocation', 'routes']),
+            ...mapGetters(['map', 'connections', 'selectedLocation', 'routes', 'mapScroll']),
             filteredSignatures() {
                 if (this.search !== "") {
                     return this.selectedLocation.signatures.filter(val => val.code.search(new RegExp(this.search, "i")) !== -1);
@@ -395,6 +395,7 @@
                 if (!this.isDragging) {
                     const interval = setInterval(async () => {
                         this.calculateMappedConnections();
+                        this.setScrollListener()
                     }, 10);
                     setTimeout(() => {
                         clearInterval(interval);
@@ -494,7 +495,7 @@
             },
             calculateMappedConnections() {
                 if (this.$refs.location) {
-                    const bDelta = 75;
+                    const bDelta = 50;
                     const bOffsets = {
                         top: {x: 0, y: -bDelta},
                         bottom: {x: 0, y: bDelta},
@@ -552,24 +553,24 @@
                 };
                 return {
                     top: {
-                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX,
-                        y: rectOffset.y + window.scrollY
+                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX + this.mapScroll.left,
+                        y: rectOffset.y + window.scrollY + this.mapScroll.top
                     },
                     bottom: {
-                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX,
-                        y: rectOffset.y + rectOffset.height + window.scrollY
+                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX + this.mapScroll.left,
+                        y: rectOffset.y + rectOffset.height + window.scrollY + this.mapScroll.top
                     },
                     right: {
-                        x: rectOffset.x + rectOffset.width + window.scrollX,
-                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY
+                        x: rectOffset.x + rectOffset.width + window.scrollX + this.mapScroll.left,
+                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY + this.mapScroll.top
                     },
                     left: {
-                        x: rectOffset.x + window.scrollX,
-                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY
+                        x: rectOffset.x + window.scrollX + this.mapScroll.left,
+                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY + this.mapScroll.top
                     },
                     middle: {
-                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX,
-                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY
+                        x: rectOffset.x + (rectOffset.width / 2) + window.scrollX + this.mapScroll.left,
+                        y: rectOffset.y + (rectOffset.height / 2) + window.scrollY + this.mapScroll.top
                     }
                 };
             },
@@ -588,6 +589,15 @@
             },
             async lookup() {
                 await this.$store.dispatch('addSystem', {name: this.name});
+            },
+            setScrollListener() {
+                const map = this.$el.querySelector("#map");
+                map.addEventListener('scroll', this.getMapScroll);
+            },
+            getMapScroll(event) {
+                if (event.target) {
+                    this.$store.commit('setMapScroll', {left: event.target.scrollLeft, top: event.target.scrollTop})
+                }
             },
             updateLink(event) {
                 const x = event.pageX - this.mapOffsetX;

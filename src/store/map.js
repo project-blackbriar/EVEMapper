@@ -12,13 +12,15 @@ export default {
         maps: [],
         map: null,
         selectedLocation: null,
+        mapScroll: {left: 0, top: 0},
     },
     getters: {
         maps: state => state.maps,
         map: state => state.map,
         selectedLocation: state => state.selectedLocation,
         connections: state => state.map.connections,
-        pilots: state => _.groupBy(_.orderBy(state.map?.pilots, 'CharacterName'), 'system_id')
+        pilots: state => _.groupBy(_.orderBy(state.map?.pilots, 'CharacterName'), 'system_id'),
+        mapScroll: state => state.mapScroll,
     },
     actions: {
         async loadMaps({commit}) {
@@ -58,6 +60,9 @@ export default {
         },
         async updateConnection({state, rootState}, connection) {
             await service.updateConnection(rootState.map.map._id, connection);
+        },
+        async setMapScroll(state, scroll) {
+            state.commit('setMapScroll', scroll)
         }
     },
     mutations: {
@@ -73,6 +78,9 @@ export default {
         },
         setSelectedLocation(state, location) {
             state.selectedLocation = location;
+        },
+        setMapScroll(state, scroll) {
+            state.mapScroll = scroll
         },
         SOCKET_updateSystem(state, val) {
             const index = state.map.locations.findIndex(loc => loc.system_id === val.system_id);
