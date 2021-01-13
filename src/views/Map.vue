@@ -58,14 +58,14 @@
             <ContextMenu ref="sigTypeMenu" 
                         inverted=true
                          :config="[
-                            {title: ' ', icon: 'plus', click: setSigType},
-                            {title: 'Combat Site', icon: 'plus', click: setSigType},
-                            {title: 'Relic Site', icon: 'plus', click: setSigType},
-                            {title: 'Data Site', icon: 'plus', click: setSigType},
-                            {title: 'Gas Site', icon: 'plus', click: setSigType},
-                            {title: 'Wormhole', icon: 'plus', click: setSigType},
-                            {title: 'Ore Site', icon: 'plus', click: setSigType},
-                            {title: 'Ghost Site', icon: 'plus', click: setSigType}
+                            {title: ' ', icon: 'minus', click: setSigType},
+                            {title: 'Combat Site', icon: '', click: setSigType},
+                            {title: 'Relic Site', icon: '', click: setSigType},
+                            {title: 'Data Site', icon: '', click: setSigType},
+                            {title: 'Gas Site', icon: '', click: setSigType},
+                            {title: 'Wormhole', icon: '', click: setSigType},
+                            {title: 'Ore Site', icon: '', click: setSigType},
+                            {title: 'Ghost Site', icon: '', click: setSigType}
                             ]"/>
             <ContextMenu ref="connectionMenu"
                          :config="[

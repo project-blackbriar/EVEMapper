@@ -51,7 +51,7 @@
         },
         methods: {
             open(evt, userData) {
-                const offset = this.inverted ? this.config.length * 44 : 0
+                const offset = this.inverted ? this.config.length * 29 : 0
                 this.x = (evt.pageX || evt.clientX) - window.scrollX;
                 this.y = (evt.pageY || evt.clientY) - window.scrollY - offset;
                 this.userData = userData;
@@ -75,13 +75,13 @@
     .lil-context-menu {
         position: fixed;
         z-index: 999;
-        min-width: 150px;
-
+        min-width: 120px;
+        font-size: 0.8rem;
 
         .context-menu-item {
             cursor: pointer;
             user-select: none;
-            padding: 10px;
+            padding: 5px 10px;
             border-radius: 2px;
 
             &:hover {
