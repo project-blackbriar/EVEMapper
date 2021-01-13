@@ -22,7 +22,7 @@
                         {{location.name}}</h6>
                 </div>
                 <div class="pilots">
-                    <p v-if="locationPilots" class="text-muted">{{locationPilots.length}}</p>
+                    <p v-if="locationPilots" class="text-muted" style="color: var(--green);">{{locationPilots.length}}</p>
                 </div>
                 <div>
                     <SecurityDisplay :security="st.goes" v-for="st in location.statics" :key="st.code">
