@@ -128,8 +128,26 @@
                                    v-b-tooltip.hover title="Anoik.is">
                                     <img class="ml-1 mr-1 icon-hover"
                                          style="height: 20px; width:20px"
-                                         src="../assets/logo_anoik.png"/></a></h4>
+                                         src="../assets/logo_anoik.png"/></a>
+                                <a target="_blank" :href="`https://zkillboard.com/system/${selectedLocation.system_id}`"
+                                   v-b-tooltip.hover title="zKillboard">
+                                    <img
+                                            class="ml-1 mr-1 icon-hover"
+                                            style="height: 20px; width:20px"
+                                            src="../assets/logo_zkill.png"/></a>
+                                         </h4>
                         </template>
+                        <b-container>
+                            <div>
+                            <div v-for="st in selectedLocation.statics" :key="st.code" style="float: left; margin: 0 0.5rem;">
+                                <SecurityDisplay :security="st.goes">
+                                    <template v-slot="{securityColor}">
+                                        <h6 style="color: white;">   {{st.code}}: <span :style="{color: securityColor}">{{st.goes}}   </span></h6>
+                                    </template>
+                                </SecurityDisplay>
+                            </div>
+                            </div>
+                        </b-container>
                     </b-card>
                     <b-card class="mt-3">
                         <template #header>
