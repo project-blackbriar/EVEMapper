@@ -1,5 +1,5 @@
 <template>
-    <b-card :no-body="!(locationPilots && locationPilots.length > 0)" @contextmenu.capture.prevent="$refs.menu.open"
+    <b-card :no-body="true" @contextmenu.capture.prevent="$refs.menu.open"
             @click.left="() => {
                 endDrag()
                 $emit('endLink', location)
@@ -21,6 +21,9 @@
                     <h6 class="text-muted" v-if="location.alias && location.alias !== location.name">
                         {{location.name}}</h6>
                 </div>
+                <div class="pilots">
+                    <p v-if="locationPilots" class="text-muted">{{locationPilots.length}}</p>
+                </div>
                 <div>
                     <SecurityDisplay :security="st.goes" v-for="st in location.statics" :key="st.code">
                         <template v-slot="{securityColor}">
@@ -33,16 +36,6 @@
                 </div>
             </div>
         </template>
-        <table class="pilots">
-            <tr :key="pilot.CharacterName" v-for="pilot in locationPilots">
-                <td class="item"
-                    :style="{color : pilot.CharacterName === auth.CharacterName ? 'var(--green)' : 'inherit'}">
-                    {{pilot.CharacterName}}
-                </td>
-                <td class="item" style="color: var(--yellow)" v-if="pilot.ship">{{pilot.ship.ship_name}}</td>
-                <td class="item" style="color: var(--orange)" v-if="pilot.ship">{{pilot.ship.type}}</td>
-            </tr>
-        </table>
 
         <b-popover :target="location.name" :show.sync="showRename" triggers="manual" placement="top">
             <template #title>Alias</template>
@@ -239,6 +232,19 @@
             height: 100%;
             justify-content: space-between;
             flex-direction: column;
+        }
+        .pilots {
+            display: flex;
+            align-items: center;
+            width: 3rem;
+            height: 100%;
+            justify-content: space-between;
+            flex-direction: column;
+            font-size: 0.9rem;
+
+            p {
+                margin: 0;
+            }
         }
     }
 </style>

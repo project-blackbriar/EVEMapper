@@ -133,6 +133,23 @@
                     </b-card>
                     <b-card class="mt-3">
                         <template #header>
+                            <h4>Pilots</h4>
+                        </template>
+                        <b-container>
+                            <table class="pilots" style="width: 100%;">
+                                <tr :key="pilot.CharacterName" v-for="pilot in locationPilots">
+                                    <td class="item"
+                                        style="color: 'inherit'; width: 40%;">
+                                        {{pilot.CharacterName}}
+                                    </td>
+                                    <td class="item" style="color: var(--yellow); width: 40%;" v-if="pilot.ship">{{pilot.ship.ship_name}}</td>
+                                    <td class="item" style="color: var(--orange); width: 20%;" v-if="pilot.ship">{{pilot.ship.type}}</td>
+                                </tr>
+                            </table>
+                        </b-container>
+                    </b-card>
+                    <b-card class="mt-3">
+                        <template #header>
                             <h4>Routes
                                 <a class="green float-right ml-2" @click.prevent="$bvModal.show('add-route-modal')"
                                    href="#"
@@ -363,12 +380,15 @@
             };
         },
         computed: {
-            ...mapGetters(['map', 'connections', 'selectedLocation', 'routes', 'mapScroll']),
+            ...mapGetters(['map', 'connections', 'selectedLocation', 'routes', 'mapScroll', 'pilots']),
             filteredSignatures() {
                 if (this.search !== "") {
                     return this.selectedLocation.signatures.filter(val => val.code.search(new RegExp(this.search, "i")) !== -1);
                 } else return this.selectedLocation.signatures;
-            }
+            },
+            locationPilots() {
+                return this.pilots[this.selectedLocation.system_id];
+            },
         },
         async created() {
             window.addEventListener('paste', this.handlePaste);
@@ -678,7 +698,7 @@
 
     .map {
         position: relative;
-        height: 80vh;
+        height: 75vh;
         overflow: auto;
         border: 1px solid rgba(0, 0, 0, 0.5);
 
@@ -725,6 +745,11 @@
         border-radius: 5px;
         user-select: none;
         cursor: pointer;
+    }
+    .pilots {
+        .item {
+            font-size: 0.8rem;
+        }
     }
 
 
