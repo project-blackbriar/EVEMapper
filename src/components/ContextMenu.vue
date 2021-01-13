@@ -28,7 +28,8 @@
             config: {
                 type: Array,
                 required: true
-            }
+            },
+            inverted: false
         },
         data() {
             return {
@@ -50,8 +51,9 @@
         },
         methods: {
             open(evt, userData) {
+                const offset = this.inverted ? this.config.length * 44 : 0
                 this.x = (evt.pageX || evt.clientX) - window.scrollX;
-                this.y = (evt.pageY || evt.clientY) - window.scrollY;
+                this.y = (evt.pageY || evt.clientY) - window.scrollY - offset;
                 this.userData = userData;
                 Vue.nextTick(() => this.$el.focus());
             },

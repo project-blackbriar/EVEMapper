@@ -55,6 +55,18 @@
             ></MapLocation>
             <ContextMenu ref="menu"
                          :config="[{title: 'System', icon: 'plus', click: () => $bvModal.show('add-system-modal')}]"></ContextMenu>
+            <ContextMenu ref="sigTypeMenu" 
+                        inverted=true
+                         :config="[
+                            {title: ' ', icon: 'plus', click: setSigType},
+                            {title: 'Combat Site', icon: 'plus', click: setSigType},
+                            {title: 'Relic Site', icon: 'plus', click: setSigType},
+                            {title: 'Data Site', icon: 'plus', click: setSigType},
+                            {title: 'Gas Site', icon: 'plus', click: setSigType},
+                            {title: 'Wormhole', icon: 'plus', click: setSigType},
+                            {title: 'Ore Site', icon: 'plus', click: setSigType},
+                            {title: 'Ghost Site', icon: 'plus', click: setSigType}
+                            ]"/>
             <ContextMenu ref="connectionMenu"
                          :config="[
                               {title: 'Toggle EOL', icon: 'clock', click: toggleEOL},
@@ -88,8 +100,11 @@
                             <template #cell(percent)="{value}">
                                 <div :style="`border-radius: 50%; width: 10px; height: 10px; background-color: var(--${value.match(new RegExp('100')) ? 'green' : 'red'})`"></div>
                             </template>
-                            <template #cell(type)="{value, index}">
-                                {{value}}
+                            <template #cell(type)="row">
+                                <div @contextmenu.capture.prevent="() => {
+                                    focusedSignature = row.item;
+                                    $refs.sigTypeMenu.open($event);
+                                    }" class="sig-item">{{row.item.type}}</div>
                             </template>
                             <template #cell(name)="{value, index}">
                                 {{value}}
@@ -663,6 +678,13 @@
                 };
                 window.addEventListener('mousemove', this.updateLink);
             },
+            setSigType(event) {
+                console.log(event.srcElement.outerText)
+                this.focusedSignature.type = event.srcElement.outerText.trim()
+                const idx = this.selectedLocation.signatures.findIndex(sig => sig.code === this.focusedSignature.code)
+                this.selectedLocation.signatures[idx] = this.focusedSignature
+                this.saveSelectedLocation()
+            },
             async endLink(location) {
                 if (this.isLinking) {
                     if (location.system_id === this.startLinkLocation.system_id) return;
@@ -768,6 +790,10 @@
         .item {
             font-size: 0.8rem;
         }
+    }
+
+    .sig-item {
+        min-height: 18px;
     }
 
 
