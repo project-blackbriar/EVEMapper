@@ -198,14 +198,6 @@
 
     }
 
-    .pilots {
-        width: 100%;
-        font-size: 0.6rem;
-
-        .item {
-            padding: 0 0.3rem
-        }
-    }
 
     .header {
         display: flex;
@@ -243,7 +235,12 @@
             font-size: 0.9rem;
 
             p {
-                margin: 0;
+                margin: 0 0.2rem;
+                min-width: 21px;
+                border-style: solid;
+                border-color: rgba(158, 158, 158, 0.95);
+                border-width: 1px;
+                text-align: center;
             }
         }
     }
