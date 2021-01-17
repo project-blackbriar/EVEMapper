@@ -216,6 +216,77 @@
                             </b-table>
                         </b-container>
                     </b-card>
+                    <b-card class="mt-3">
+                        <template #header>
+                            <h4>Recent Kills</h4>
+                        </template>
+                        <b-container>
+                            <table class="killmails" style="width: 100%;">
+                                <tr>
+                                    <th class="km-header">Victim</th>
+                                    <th class="km-header" style="text-align: center;">Killmail</th>
+                                    <th class="km-header" style="text-align: right;">Attacker</th>
+                                </tr>
+                                <tr :key="kill.killmail_id" v-for="kill in selectedLocation.kills">
+                                    <td class="km-row" style="width: 40%; text-align: right;">
+                                        <a v-b-tooltip.hover
+                                            :title="kill.victim.corporation.name"
+                                            :href="`https://zkillboard.com/corporation/${kill.victim.corporation.id}/`">
+                                            <img class="ml-1 mr-1 icon-hover km-thumb"
+                                            :src="`https://images.evetech.net/corporations/${kill.victim.corporation.id}/logo?size=64`"/>
+                                        </a>
+                                        <a v-b-tooltip.hover
+                                            :title="kill.victim.character.name"
+                                            :href="`https://zkillboard.com/character/${kill.victim.character.id}/`">
+                                            <img class="ml-1 mr-1 icon-hover km-thumb"
+                                            :src="`https://images.evetech.net/characters/${kill.victim.character.id}/portrait?size=64`"/>
+                                        </a>
+                                        <a v-b-tooltip.hover
+                                            :title="kill.victim.inventory_type.name"
+                                            :href="`https://zkillboard.com/ship/${kill.victim.inventory_type.id}/`">
+                                            <img class="ml-1 mr-1 icon-hover km-thumb"
+                                            :src="`https://images.evetech.net/types/${kill.victim.inventory_type.id}/render?size=64`"/>
+                                        </a>
+                                    </td>
+                                    <td style="color: var(--yellow); width: 10%; text-align: center;">
+                                        <a v-b-tooltip.hover
+                                            title="Killmail"
+                                            :href="`https://zkillboard.com/kill/${kill.killmail_id}/`">
+                                            <i class="fas fa-skull-crossbones fa-3x" style="color: #a52521"></i>
+                                        </a>
+                                    </td>
+                                    <td class="km-row" style="color: var(--orange); width: 40%;" v-if="kill.attackers.faction">
+                                        <a v-b-tooltip.hover
+                                            :title="`${kill.attackers.inventory_type.name} - ${kill.attackers.faction.name}`"
+                                            :href="`https://zkillboard.com/ship/${kill.attackers.inventory_type.id}/`">
+                                            <img class="ml-1 mr-1 icon-hover km-thumb"
+                                            :src="`https://images.evetech.net/types/${kill.attackers.inventory_type.id}/render?size=64`"/>
+                                        </a>
+                                    </td>
+                                    <td class="km-row" style="color: var(--orange); width: 40%;" v-else>
+                                        <a v-b-tooltip.hover
+                                            :title="kill.attackers.inventory_type.name"
+                                            :href="`https://zkillboard.com/ship/${kill.attackers.inventory_type.id}/`">
+                                            <img class="ml-1 mr-1 icon-hover km-thumb"
+                                            :src="`https://images.evetech.net/types/${kill.attackers.inventory_type.id}/render?size=64`"/>
+                                        </a>
+                                        <a v-b-tooltip.hover
+                                            :title="kill.attackers.character.name"
+                                            :href="`https://zkillboard.com/character/${kill.attackers.character.id}/`">
+                                            <img class="ml-1 mr-1 icon-hover km-thumb"
+                                            :src="`https://images.evetech.net/characters/${kill.attackers.character.id}/portrait?size=64`"/>
+                                        </a>
+                                        <a v-b-tooltip.hover
+                                            :title="kill.attackers.corporation.name"
+                                            :href="`https://zkillboard.com/corporation/${kill.attackers.corporation.id}/`">
+                                            <img class="ml-1 mr-1 icon-hover km-thumb"
+                                            :src="`https://images.evetech.net/corporations/${kill.attackers.corporation.id}/logo?size=64`"/>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </b-container>
+                    </b-card>
                 </b-col>
             </b-row>
         </b-container>
@@ -494,11 +565,12 @@
                 await this.$store.dispatch('getRoutes', {origin: this.selectedLocation.system_id});
             },
             selectLocation(location) {
-                this.$store.commit('setSelectedLocation', location);
+                this.$store.commit('setSelectedLocation', {...location, kills: []});
+                this.$store.dispatch('getKills', location);
             },
             outerConnectionStyle(connection) {
                 return {
-                    stroke: this.overConnection.from === connection.from && this.overConnection.to === connection.to ? 'var(--white)' : connection.eol ? 'var(--purple)' : 'var(--dark)',
+                    stroke: this.overConnection.from === connection.from && this.overConnection.to === connection.to ? 'var(--white)' : connection.eol ? 'var(--purple)' : '#999',
                     'stroke-width': '10',
                     fill: 'none'
                 };
@@ -735,66 +807,79 @@
 </script>
 
 <style scoped lang="scss">
+.km-header {
+    border-bottom: 1px solid black;
+}
+.km-row {
+    height: 74px;
+    min-width: 180px;
+}
+.km-thumb {
+    height: 50px; width:50px;
+}
 
-    .map {
-        position: relative;
-        height: 75vh;
-        overflow: auto;
-        border: 1px solid rgba(0, 0, 0, 0.5);
+.card-small {
+    min-width: 600px;
+}
 
-        .lines {
-            position: absolute;
-            height: 1000px;
-            width: 2000px;
+.map {
+    position: relative;
+    height: 75vh;
+    overflow: auto;
+    border: 1px solid rgba(0, 0, 0, 0.5);
 
-            .path-outer {
-                stroke: red !important;
-            }
-        }
-    }
-
-    .icon-hover {
-        cursor: pointer;
-        transition: transform 50ms;
-
-        &:hover {
-            transform: scale(1.1);
-        }
-    }
-
-    .path {
-        transition: stroke 150ms ease-in-out;
-        cursor: pointer;
-    }
-
-
-    .delete {
-        color: var(--red);
-
-        &:hover {
-            color: red
-        }
-    }
-
-    .connection-size {
+    .lines {
         position: absolute;
-        background-color: var(--dark);
-        width: 1.5rem;
-        height: 1.5rem;
-        text-align: center;
-        border-radius: 5px;
-        user-select: none;
-        cursor: pointer;
-    }
-    .pilots {
-        .item {
-            font-size: 0.8rem;
+        height: 1000px;
+        width: 2000px;
+
+        .path-outer {
+            stroke: red !important;
         }
     }
+}
 
-    .sig-item {
-        min-height: 18px;
+.icon-hover {
+    cursor: pointer;
+    transition: transform 50ms;
+
+    &:hover {
+        transform: scale(1.1);
     }
+}
 
+.path {
+    transition: stroke 150ms ease-in-out;
+    cursor: pointer;
+}
+
+
+.delete {
+    color: var(--red);
+
+    &:hover {
+        color: red
+    }
+}
+
+.connection-size {
+    position: absolute;
+    background-color: var(--dark);
+    width: 1.5rem;
+    height: 1.5rem;
+    text-align: center;
+    border-radius: 5px;
+    user-select: none;
+    cursor: pointer;
+}
+.pilots {
+    .item {
+        font-size: 0.8rem;
+    }
+}
+
+.sig-item {
+    min-height: 18px;
+}
 
 </style>

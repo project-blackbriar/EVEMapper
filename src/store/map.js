@@ -63,6 +63,56 @@ export default {
         },
         async setMapScroll(state, scroll) {
             state.commit('setMapScroll', scroll)
+        },
+        async getKills({commit, getters}, system) {
+            const response = await eveService.ZKAPI.get(`kills/solarSystemID/${system.system_id}/pastSeconds/86400/`);
+            response.data.forEach(async kill => {
+                const km = await eveService.ESI.get(`killmails/${kill.killmail_id}/${kill.zkb.hash}/?datasource=tranquility`)
+                const victimIds = [
+                    km.data.victim.character_id,
+                    km.data.victim.corporation_id,
+                    km.data.victim.ship_type_id
+                ]
+                let attackerIds
+                if (km.data.attackers[0].faction_id) { // NPC
+                    attackerIds = [
+                        km.data.attackers[0].faction_id,
+                        km.data.attackers[0].ship_type_id
+                    ]
+                } else { // Player
+                    attackerIds = [
+                        km.data.attackers[0].character_id,
+                        km.data.attackers[0].corporation_id,
+                        km.data.attackers[0].ship_type_id
+                    ]
+                }
+                const victimNames = await eveService.ESI.post(`universe/names/?datasource=tranquility`, victimIds).then(names => {
+                    let output = {}
+                    names.data.forEach(item => {
+                        output[item.category] = {id: item.id, name: item.name}
+                    })
+                    return output
+                })
+                const attackerNames = await eveService.ESI.post(`universe/names/?datasource=tranquility`, attackerIds).then(names => {
+                    let output = {}
+                    names.data.forEach(item => {
+                        output[item.category] = {id: item.id, name: item.name}
+                    })
+                    return output
+                })
+                //const proc = attackerNames
+                console.log(attackerNames)
+
+                commit('addKillToLocation', {
+                    killmail_id: km.data.killmail_id,
+                    killmail_time: km.data.killmail_time,
+                    victim: {...victimNames},
+                    attackers: {
+                        ...attackerNames,
+                        count: km.data.attackers.length
+                    }
+                })
+            })
         }
     },
     mutations: {
@@ -78,6 +128,9 @@ export default {
         },
         setSelectedLocation(state, location) {
             state.selectedLocation = location;
+        },
+        addKillToLocation(state, kill) {
+            state.selectedLocation.kills.push(kill)
         },
         setMapScroll(state, scroll) {
             state.mapScroll = scroll
