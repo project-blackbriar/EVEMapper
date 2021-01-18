@@ -65,7 +65,6 @@ export default {
             await service.updateConnection(rootState.map.map._id, connection);
         },
         async deleteConnection({state, rootState}, connection) {
-            console.log('delConnection', connection)
             await service.deleteConnection(rootState.map.map._id, connection);
         },
         async setMapScroll(state, scroll) {
@@ -168,7 +167,10 @@ export default {
                 Vue.set(state.map.connections, index, val);
             }
         },
-        SOCKET_removeConnection(state, systemId) {
+        SOCKET_removeConnection(state, connection) {
+            state.map.connections = state.map.connections.filter(conn => !(conn.from === connection.from && conn.to === connection.to))
+        },
+        SOCKET_delinkSystem(state, systemId) {
             state.map.connections = state.map.connections.filter(val => val.from !== parseInt(systemId) && val.to !== parseInt(systemId));
         },
         SOCKET_addPilot(state, pilot) {
