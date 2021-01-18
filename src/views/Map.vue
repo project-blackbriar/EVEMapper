@@ -759,48 +759,41 @@
             },
             async endLink(location) {
                 if (this.isLinking) {
-                    if (location.system_id === this.startLinkLocation.system_id) return;
+                    const fromID = this.startLinkLocation.system_id;
+                    const toID = location.system_id;
+                    if (fromID === toID) return;
                     window.removeEventListener('mousemove', this.updateLink);
                     this.link = null;
-                    if (this.startLinkLocation.connections?.includes(location.system_id)) {
+                    const existing = this.map.connections.filter(c => {
+                        if ((c.from === fromID && c.to === toID) || (c.from === toID && c.to === fromID)) {
+                            return true
+                        } return false
+                    })
+                    if (existing.length != 0) {
                         this.$bvToast.toast('Already Linked', {
                             title: 'Link',
                             variant: 'warning'
                         });
                         return;
                     }
-                    await this.$store.dispatch('updateLocation', {
-                        location: {
-                            ...this.startLinkLocation,
-                            connections: [...(this.startLinkLocation.connections ?? []), location.system_id]
+
+                    await this.$store.dispatch('addConnection', {
+                        connection: {
+                            from: fromID,
+                            to: toID,
+                            size: "?",
+                            eol: false,
+                            status:1
                         }
-                    });
-                    await this.$store.dispatch('updateLocation', {
-                        location: {
-                            ...location,
-                            connections: [...(location.connections ?? []), this.startLinkLocation.system_id]
-                        }
-                    });
+                    })
                     this.startLinkLocation = false;
                     this.isLinking = false;
                 }
             },
             async unlink() {
-                const startLocation = this.map.locations.find(val => val.system_id === this.focusedConnection.start.system_id);
-                const endLocation = this.map.locations.find(val => val.system_id === this.focusedConnection.end.system_id);
-
-                await this.$store.dispatch('updateLocation', {
-                    location: {
-                        ...startLocation,
-                        connections: startLocation.connections.filter(val => val !== this.focusedConnection.end.system_id)
-                    }
-                });
-                await this.$store.dispatch('updateLocation', {
-                    location: {
-                        ...endLocation,
-                        connections: endLocation.connections.filter(val => val !== this.focusedConnection.start.system_id)
-                    }
-                });
+                await this.$store.dispatch('deleteConnection', {
+                    connection: this.focusedConnection
+                })
             }
         }
     };

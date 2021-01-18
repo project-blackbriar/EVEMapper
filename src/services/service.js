@@ -96,9 +96,27 @@ class Service {
         }));
     }
 
+    async addConnection(mapId, connection) {
+        await this.checkToken();
+        return (await this.api.post(`/maps/${mapId}/connection/add`, connection, {
+            params: {
+                token: store.getters.auth.access_token,
+            }
+        }));
+    }
+
     async updateConnection(mapId, connection) {
         await this.checkToken();
         return (await this.api.put(`/maps/${mapId}/connection`, connection, {
+            params: {
+                token: store.getters.auth.access_token,
+            }
+        }));
+    }
+
+    async deleteConnection(mapId, connection) {
+        await this.checkToken();
+        return (await this.api.post(`/maps/${mapId}/connection/delete`, connection, {
             params: {
                 token: store.getters.auth.access_token,
             }

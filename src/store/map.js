@@ -58,8 +58,15 @@ export default {
                 variant: 'danger'
             });
         },
+        async addConnection({state, rootState}, connection) {
+            await service.addConnection(rootState.map.map._id, connection);
+        },
         async updateConnection({state, rootState}, connection) {
             await service.updateConnection(rootState.map.map._id, connection);
+        },
+        async deleteConnection({state, rootState}, connection) {
+            console.log('delConnection', connection)
+            await service.deleteConnection(rootState.map.map._id, connection);
         },
         async setMapScroll(state, scroll) {
             state.commit('setMapScroll', scroll)

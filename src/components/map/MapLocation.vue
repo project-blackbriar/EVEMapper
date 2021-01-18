@@ -56,7 +56,7 @@
         name: "MapLocation",
         components: {SecurityDisplay, ContextMenu, SideBar, SideBarItem},
         computed: {
-            ...mapGetters(['auth', 'pilots', 'mapScroll']),
+            ...mapGetters(['auth', 'pilots', 'mapScroll', 'map']),
             locationPilots() {
                 return this.pilots[this.location.system_id];
             },
@@ -101,6 +101,7 @@
                         class: "remove",
                     },
                     {title: 'Remove', endIcon: 'trash', click: this.remove, class: "remove",},
+                    {title: 'Remove Chain', endIcon: 'trash', click: this.removeChain, class: "remove",},
                 ]
             };
         },
@@ -160,6 +161,12 @@
             },
             remove() {
                 this.$store.dispatch('removeLocation', this.location);
+            },
+            removeChain() {
+                // Find route home
+
+                // Delete all other links
+                
             }
         }
     };
