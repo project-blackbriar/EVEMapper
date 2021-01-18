@@ -42,6 +42,16 @@
             <b-input name="alias" v-model="alias" @keyup.enter.prevent="rename"/>
         </b-popover>
         <ContextMenu ref="menu" :config="contextConfig"/>
+        <b-modal :id="'delconfirm' + location.system_id" centered title="Are you sure?" @ok="confirmRemoveChain" @cancel="clearQ" @close="clearQ">
+            <form ref="form" @submit.prevent>
+                <h6>This will delete the following systems:</h6>
+                <ul>
+                    <li v-for="item in deleteQ" :key="item.system_id">
+                        {{item.name}} - {{item.alias}}
+                    </li>
+                </ul>
+            </form>
+        </b-modal>
     </b-card>
 </template>
 
@@ -93,6 +103,7 @@
                 element: null,
                 showRename: false,
                 showContext: false,
+                deleteQ: [],
                 contextConfig: [
                     {
                         title: 'Link',
@@ -160,14 +171,87 @@
                 this.$refs.menu.close();
             },
             remove() {
-                this.$store.dispatch('removeLocation', this.location);
+                if (this.location.system_id != this.map.home) {
+                    this.$store.dispatch('removeLocation', this.location);
+                } else {
+                    this.$bvToast.toast('Cannot delete home system', {
+                        title: 'Not allowed',
+                        variant: 'danger'
+                    });
+                }
             },
             removeChain() {
                 // Find route home
-
+                const locations = [...this.map.locations]
+                const connections = [...this.map.connections]
+                var chains = this.findConnectedTo(this.location.system_id, connections)
+                const origin = locations.find(l => l.system_id === this.location.system_id)
+                origin.searched = true
+                var searched = {}
+                let homeChain = []
+                var Q = []
+                searched[origin.system_id] = true
+                chains.forEach(chain => {
+                    Q = [] // Reset Q
+                    Q.push(locations.find(l => l.system_id === chain)) // Push chain origin
+                    Q[0].searched = true
+                    while (Q.length > 0) {
+                        const node = Q.shift()
+                        if (node.system_id === this.map.home) {
+                            homeChain.push(chain)
+                            break
+                        }
+                        for (const id of this.findConnectedTo(node.system_id, connections)) {
+                            const conn = locations.find(l => l.system_id === id)
+                            if (!(conn.system_id in searched)) {
+                                searched[conn.system_id] = true
+                                Q.push(conn)
+                            }
+                        }
+                    }
+                })
                 // Delete all other links
-                
-            }
+                var delQ = []
+                Q = []
+                searched = {}
+                Q.push(origin)
+                searched[origin.system_id] = true
+                while (Q.length > 0) {
+                    const node = Q.shift()
+                    this.deleteQ.push(node)
+                    for (const id of this.findConnectedTo(node.system_id, connections)) {
+                        const conn = locations.find(l => l.system_id === id)
+                        if (homeChain.includes(conn.system_id)) {
+                            continue
+                        }
+                        if (searched[conn.system_id] == false || !(conn.system_id in searched)) {
+                            searched[conn.system_id] = true
+                            Q.push(conn)
+                        }
+                    }
+                }
+                this.$bvModal.show(`delconfirm${this.location.system_id}`)
+            },
+            confirmRemoveChain() {
+                this.deleteQ.forEach(system => {
+                    this.$store.dispatch('removeLocation', system)
+                })
+            },
+            clearQ() {
+                this.deleteQ = []
+            },
+            findConnectedTo(system_id, connections) {
+                let connected = []
+                connections.forEach(connection => {
+                    if (connection.from === system_id) {
+                        connected.push(connection.to)
+                    }
+                    if (connection.to === system_id) {
+                        connected.push(connection.from)
+                    }
+                })
+                return connected
+            },
         }
     };
 </script>
