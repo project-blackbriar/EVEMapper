@@ -570,7 +570,7 @@
             },
             outerConnectionStyle(connection) {
                 return {
-                    stroke: this.overConnection.from === connection.from && this.overConnection.to === connection.to ? 'var(--white)' : connection.eol ? 'var(--purple)' : '#999',
+                    stroke: this.overConnection.from === connection.from && this.overConnection.to === connection.to ? 'var(--white)' : connection.eol ? 'var(--purple)' : '#666',
                     'stroke-width': '10',
                     fill: 'none'
                 };

@@ -100,9 +100,6 @@ export default {
                     })
                     return output
                 })
-                //const proc = attackerNames
-                console.log(attackerNames)
-
                 commit('addKillToLocation', {
                     killmail_id: km.data.killmail_id,
                     killmail_time: km.data.killmail_time,
