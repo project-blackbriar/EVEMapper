@@ -15,6 +15,13 @@
                         <h4 :style="{color: securityColor}">{{location.security}}</h4>
                     </template>
                 </SecurityDisplay>
+                <EffectsDisplay v-if="location.effect" :effect="location.effect">
+                    <template v-slot="{effectColor}">
+                        <a v-b-tooltip.hover :title="camelCaseToWords(location.effect)">
+                            <b-icon-square-fill :style="{color: effectColor}" class="ml-1" scale="0.8"></b-icon-square-fill>
+                        </a>
+                    </template>
+                </EffectsDisplay>
                 <div class="names ml-2 mr-2">
                     <h4 @dblclick="showRename = true" class="move">
                         {{location.alias ?location.alias : location.name}}</h4>
@@ -60,11 +67,12 @@
     import SideBar from "../SideBar";
     import ContextMenu from "../ContextMenu";
     import SecurityDisplay from "./SecurityDisplay";
+    import EffectsDisplay from "./EffectsDisplay";
     import {mapGetters} from "vuex";
 
     export default {
         name: "MapLocation",
-        components: {SecurityDisplay, ContextMenu, SideBar, SideBarItem},
+        components: {SecurityDisplay, ContextMenu, SideBar, SideBarItem, EffectsDisplay},
         computed: {
             ...mapGetters(['auth', 'pilots', 'mapScroll', 'map']),
             locationPilots() {
@@ -252,6 +260,12 @@
                 })
                 return connected
             },
+            camelCaseToWords(str) {
+                return str.match(/^[a-z]+|[A-Z][a-z]*/g).map(function(x){
+                    return x[0].toUpperCase() + x.substr(1).toLowerCase();
+                }).join(' ');
+            }
+
         }
     };
 </script>
