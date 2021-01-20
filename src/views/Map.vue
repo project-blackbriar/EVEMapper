@@ -200,7 +200,10 @@
                                     <Security v-else :security="system.security_status" :key="system.system_id"
                                               v-for="system in value">
                                         <template v-slot="{securityColor}">
-                                            <a v-b-tooltip.hover
+                                            <a v-if="system.type === 'WH'" v-b-tooltip.hover :title="system.name + ' (' + system.connection_size + ')'">
+                                                <b-icon-distribute-vertical class="ml-1" :style="{color: sizeColor(system.connection_size)}"></b-icon-distribute-vertical>
+                                            </a>
+                                            <a v-else v-b-tooltip.hover
                                                :title="system.name + ' (' + Math.floor(system.security_status * 10) / 10 +')'">
                                                 <b-icon-square-fill v-if="system.type === 'K'" :style="{color: securityColor}"
                                                                     class="ml-1"></b-icon-square-fill>
@@ -536,6 +539,19 @@
             }
         },
         methods: {
+            sizeColor(size) {
+                if (size == "XL") {
+                    return '#DC3201';
+                } else if (size == "L") {
+                    return '#F5F501';
+                } else if (size == "M") {
+                    return '#00FF00';
+                } else if (size == "S") {
+                    return '#33F9F9';
+                } else {
+                    return '#888';
+                }
+            },
             connectionsToID(id) {
                 return this.connections.filter(conn => conn.from == id || conn.to == id).map(connection => {
                     return connection.to == id ? connection.from : connection.to
