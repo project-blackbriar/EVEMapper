@@ -63,6 +63,15 @@ export default {
                             })
                         }
                     })
+                } else {
+                    procRoutes[ri].systems.push({
+                        key: origin + ri,
+                        system_id: origin + ri,
+                        security_status: -1,
+                        connection_size: "-",
+                        name: "No Route",
+                        type: "WH"
+                    })
                 }
             });
             commit('setRoutes', procRoutes);
