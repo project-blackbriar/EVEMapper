@@ -123,6 +123,7 @@
                         click: () => this.$emit('startLink', this.location),
                         class: "remove",
                     },
+                    {title: 'Rally Point', endIcon: 'exclamation-diamond-fill', click: this.toggleRally, class: "remove",},
                     {title: 'Remove', endIcon: 'trash', click: this.remove, class: "remove",},
                     {title: 'Remove Chain', endIcon: 'trash', click: this.removeChain, class: "remove",},
                 ]
@@ -268,6 +269,10 @@
                 return str.match(/^[a-z]+|[A-Z][a-z]*/g).map(function(x){
                     return x[0].toUpperCase() + x.substr(1).toLowerCase();
                 }).join(' ');
+            },
+            toggleRally() {
+                this.location.rally == !this.location.rally;
+                this.$store.dispatch('updateLocation', {location: this.location});
             }
 
         }

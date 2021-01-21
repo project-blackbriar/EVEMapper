@@ -133,6 +133,9 @@ export default {
             state.selectedLocation = location;
         },
         addKillToLocation(state, kill) {
+            if (!state.selectedLocation.kills) {
+                state.selectedLocation.kills = []
+            }
             state.selectedLocation.kills.push(kill)
         },
         setMapScroll(state, scroll) {

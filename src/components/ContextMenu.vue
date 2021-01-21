@@ -13,7 +13,7 @@
                 [child.class] : true
              }" @contextmenu.stop v-for="child in config" @click="child.click">
             <b-icon v-if="child.icon" :icon="child.icon"/>
-            <span> {{child.title}}</span>
+            <span> {{child.title}} </span>
             <b-icon v-if="child.endIcon" class="append" :icon="child.endIcon"/>
         </div>
     </b-card>

@@ -222,7 +222,7 @@
                     </b-card>
                     <b-card class="mt-3">
                         <template #header>
-                            <h4>Recent Kills</h4>
+                            <h4>Recent Kills (last 24h)</h4>
                         </template>
                         <b-container>
                             <table class="killmails" style="width: 100%;">
