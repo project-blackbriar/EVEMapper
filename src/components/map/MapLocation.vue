@@ -5,7 +5,7 @@
                 $emit('endLink', location)
             }"
             :id="location.name"
-            :class="{location : true, in:isPilotIn , moving: !isDragging, selected : selected}"
+            :class="{location : true, in:isPilotIn , moving: !isDragging, selected : selected, highlighted: highlighted}"
             :style="`top: ${location.top}px; left: ${location.left}px;`">
         <template #header>
             <div class="header"
@@ -88,6 +88,10 @@
                 required: true
             },
             selected: {
+                type: Boolean,
+                required: true
+            },
+            highlighted: {
                 type: Boolean,
                 required: true
             },
@@ -299,6 +303,10 @@
 
         &.selected {
             box-shadow: 0px 0px 5px 2px var(--blue)
+        }
+        &.highlighted {
+            border-radius: 0.5rem;
+            border: #ffb10f 0.2rem solid;
         }
 
     }

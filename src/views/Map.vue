@@ -47,6 +47,7 @@
                          v-for="location in map.locations"
                          :location="location" :key="location.name"
                          :selected="selectedLocation !== null && selectedLocation.system_id === location.system_id"
+                         :highlighted="highlightedLocations.includes(location.system_id)"
                          @startLink="startLink"
                          @endLink="endLink"
                          @startDrag="isDragging = true"
@@ -194,7 +195,7 @@
                         <b-container>
                             <b-table
                                     striped :fields="routeFields" hover small
-                                    :items="routes">
+                                    :items="routes" @row-clicked="routeClick">
                                 <template #cell(systems)="{value}">
                                     <div v-if="typeof value === 'string'">No Route Found</div>
                                     <Security v-else :security="system.security_status" :key="system.system_id"
@@ -411,6 +412,8 @@
                 isDragging: false,
                 loading: false,
                 overConnection: {},
+                highlightedConnections: [],
+                highlightedLocations: [],
                 mapOffsetX: 0,
                 mapOffsetY: 0,
                 name: "J160941",
@@ -585,15 +588,25 @@
                 this.$store.dispatch('getKills', location);
             },
             outerConnectionStyle(connection) {
+                var stroke = this.overConnection.from === connection.from && this.overConnection.to === connection.to ? 'var(--white)' : connection.eol ? 'var(--purple)' : '#666'
+                var strokeW = '10'
+                if (this.highlightedConnections.includes(connection.key)) {
+                    stroke = '#ffb10f'
+                    strokeW = '15'
+                }
                 return {
-                    stroke: this.overConnection.from === connection.from && this.overConnection.to === connection.to ? 'var(--white)' : connection.eol ? 'var(--purple)' : '#666',
-                    'stroke-width': '10',
+                    stroke: stroke,
+                    'stroke-width': strokeW,
                     fill: 'none'
                 };
             },
             innerConnectionStyle(connection) {
+                var stroke = connection.status === 1 ? 'var(--path-stroke)' : connection.status === 2 ? 'var(--orange)' : 'var(--red)'
+                if (this.highlightedConnections.includes(connection.key)) {
+                    stroke = 'var(--orange)'
+                }
                 return {
-                    stroke: connection.status === 1 ? 'var(--path-stroke)' : connection.status === 2 ? 'var(--orange)' : 'var(--red)',
+                    stroke: stroke,
                     'stroke-width': '5',
                     fill: 'none'
                 };
@@ -810,6 +823,20 @@
                 await this.$store.dispatch('deleteConnection', {
                     connection: this.focusedConnection
                 })
+            },
+            routeClick(row, idx) {
+                this.highlightedConnections = row.systems.filter(sys => sys.type == "WH").map(sys => sys.key)
+                this.highlightedLocations = row.systems.filter(sys => sys.type == "K" || sys.type == "J").map(sys => sys.system_id)
+                console.log('high loc:',this.highlightedLocations)
+                console.log('high conn:',this.highlightedConnections)
+                setTimeout(() => {
+                    window.addEventListener('click', this.clearHighlight);
+                }, 500)
+            },
+            clearHighlight() {
+                this.highlightedConnections = []
+                this.highlightedLocations = []
+                window.removeEventListener('click', this.clearHighlight);
             }
         }
     };

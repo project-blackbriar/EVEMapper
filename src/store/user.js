@@ -36,31 +36,34 @@ export default {
                     flag: route.flag,
                     systems: []
                 })
-                route.systems.forEach((system, si) => {
-                    procRoutes[ri].systems.push(system)
-                    const nextSystem = route.systems[si + 1] ?? null
-                    if (nextSystem && (system.type == "J" || nextSystem?.type == "J")) {
-                        const connection = rootState.map.map.connections.find(c => {
-                            if (c.from === system.system_id && c.to === nextSystem?.system_id) {
-                                return true
+                if (route.systems != "No Route Found"){
+                    route.systems.forEach((system, si) => {
+                        procRoutes[ri].systems.push(system)
+                        const nextSystem = route.systems[si + 1] ?? null
+                        if (nextSystem && (system.type == "J" || nextSystem?.type == "J")) {
+                            const connection = rootState.map.map.connections.find(c => {
+                                if (c.from === system.system_id && c.to === nextSystem?.system_id) {
+                                    return true
+                                }
+                                if (c.to === system.system_id && c.from === nextSystem?.system_id) {
+                                    return true
+                                }
+                                return false
+                            })
+                            if (!connection) {
+                                console.log('Cannot find connection between:',system.name,nextSystem?.name)
                             }
-                            if (c.to === system.system_id && c.from === nextSystem?.system_id) {
-                                return true
-                            }
-                            return false
-                        })
-                        if (!connection) {
-                            console.log('Cannot find connection between:',system.name,nextSystem?.name)
+                            procRoutes[ri].systems.push({
+                                key: connection.key,
+                                system_id: si,
+                                security_status: -1,
+                                connection_size: connection.size,
+                                name: "Wormhole",
+                                type: "WH"
+                            })
                         }
-                        procRoutes[ri].systems.push({
-                            system_id: si,
-                            security_status: -1,
-                            connection_size: connection.size,
-                            name: "Wormhole",
-                            type: "WH"
-                        })
-                    }
-                })
+                    })
+                }
             });
             commit('setRoutes', procRoutes);
         },
