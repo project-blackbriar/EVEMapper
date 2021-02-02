@@ -1,0 +1,5 @@
+# Change this file's filename to .env and fill in your details
+VUE_APP_API_URL="http://localhost:3000"
+VUE_APP_API_CALLBACK="http://localhost:8080/sso/callback"
+VUE_APP_EVE_CLIENT_ID="1234abcd"
+VUE_APP_EVE_CRON_TIMEOUT=2500
