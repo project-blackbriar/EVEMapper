@@ -644,7 +644,8 @@
             toggleEOL() {
                 this.$store.dispatch('updateConnection', {
                     ...this.focusedConnection,
-                    eol: !this.focusedConnection.eol
+                    eol: !this.focusedConnection.eol,
+                    eol_time: this.focusedConnection.eol?null:new Date()
                 });
             },
             calculateMappedConnections() {
