@@ -12,13 +12,22 @@ export default {
         maps: [],
         map: null,
         selectedLocation: null,
+        highlightedConnections: [],
+        highlightedLocations: [],
         mapScroll: {left: 0, top: 0},
+        focusedConnection: {
+            status: 0,
+            size: "?"
+        },
     },
     getters: {
         maps: state => state.maps,
         map: state => state.map,
         selectedLocation: state => state.selectedLocation,
+        highlightedConnections: state => state.highlightedConnections,
+        highlightedLocations: state => state.highlightedLocations,
         connections: state => state.map.connections,
+        focusedConnection: state => state.map.focusedConnection,
         pilots: state => _.groupBy(_.orderBy(state.map?.pilots, 'CharacterName'), 'system_id'),
         mapScroll: state => state.mapScroll,
     },
@@ -140,6 +149,15 @@ export default {
         },
         setMapScroll(state, scroll) {
             state.mapScroll = scroll
+        },
+        setHighlightedLocations(state, locations) {
+            state.highlightedLocations = locations
+        },
+        setHighlightedConnections(state, connections) {
+            state.highlightedConnections = connections
+        },
+        setFocusedConnection(state, connection) {
+            state.focusedConnection = connection
         },
         SOCKET_updateSystem(state, val) {
             const index = state.map.locations.findIndex(loc => loc.system_id === val.system_id);

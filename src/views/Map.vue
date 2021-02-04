@@ -2,47 +2,17 @@
     <Loading v-if="loading"/>
     <div v-else v-resize:debounce="resetSize">
         <div id="map" class="map light" @click="resetFocus" @contextmenu.capture.prevent="$refs.menu.open">
-            <svg class="lines" v-for="connection in mappedConnections" :key="`${connection.key}-line`"
-                 pointer-events="visible"
-            >
-                <path v-if="connection.pathString"
-                      pointer-events="visibleStroke"
-                      :d="connection.pathString"
-                      @mouseleave="leaveConnection"
-                      @mouseenter="enterConnection(connection, $event)"
-                      :style="outerConnectionStyle(connection)"
-                      :stroke-dasharray="connectionDashArray(connection.size)"
-                      stroke-linecap="round"
-                      @contextmenu.stop
-                      class="path"
-                />
-                <path v-if="connection.pathString"
-                      :d="connection.pathString"
-                      :style="innerConnectionStyle(connection)"
-                      pointer-events="visibleStroke"
-                      @mouseleave="leaveConnection"
-                      @mouseenter="enterConnection(connection, $event)"
-                      @contextmenu.stop
-                      class="path"
-                />
-            </svg>
+            <MapConnection v-for="connection in mappedConnections" :key="connection.key" :connection="connection" />
             <svg class="lines2">
-                <line v-if="link" :x1="link.start.left" :y1="link.start.top"
-                      :x2="link.end.left" :y2="link.end.top"
-                      style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6"></line>
+                <line
+                    v-if="link"
+                    :x1="link.start.left"
+                    :y1="link.start.top"
+                    :x2="link.end.left"
+                    :y2="link.end.top"
+                    style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6"
+                ></line>
             </svg>
-            <div v-for="connection in mappedConnections" :key="`${connection.key}-middle`">
-                <div class="connection-size" v-if="connection.middle.y"
-                     @mouseleave="leaveConnection"
-                     @mouseenter="enterConnection(connection, $event)"
-                     :style="`top: ${connection.middle.y - 10}px; left: ${connection.middle.x - 10}px;`"
-                     @contextmenu.stop.prevent="() => {
-                                focusedConnection = connection
-                                $refs.connectionMenu.open($event)
-                            }"
-                >{{connection.size}}
-                </div>
-            </div>
             <MapLocation ref="location" class="selectable" :map-offset-x="mapOffsetX" :map-offset-y="mapOffsetY"
                          v-for="location in map.locations"
                          :location="location" :key="location.name"
@@ -56,241 +26,17 @@
             ></MapLocation>
             <ContextMenu ref="menu"
                          :config="[{title: 'System', icon: 'plus', click: () => $bvModal.show('add-system-modal')}]"></ContextMenu>
-            <ContextMenu ref="sigTypeMenu" 
-                        inverted=true
-                         :config="[
-                            {title: ' ', icon: 'minus', click: setSigType},
-                            {title: 'Combat Site', icon: '', click: setSigType},
-                            {title: 'Relic Site', icon: '', click: setSigType},
-                            {title: 'Data Site', icon: '', click: setSigType},
-                            {title: 'Gas Site', icon: '', click: setSigType},
-                            {title: 'Wormhole', icon: '', click: setSigType},
-                            {title: 'Ore Site', icon: '', click: setSigType},
-                            {title: 'Ghost Site', icon: '', click: setSigType}
-                            ]"/>
-            <ContextMenu ref="connectionMenu"
-                         :config="[
-                              {title: 'Toggle EOL', icon: 'clock', click: toggleEOL},
-                             {title: 'Status', endIcon: 'status', click: () => $bvModal.show('set-connection-status-modal')},
-                             {title: 'Size', endIcon: 'size', click: () => $bvModal.show('set-connection-size-modal')},
-                               {title: 'Unlink', icon: 'link', click: unlink}
-                               ]"/>
-            <ContextMenu ref="leadsToMenu"
-                         :config="[
-                             {title: 'Leads to', endIcon: 'status', click: () => $bvModal.show('set-leadsto-system-modal')},
-                               ]"/>
         </div>
         <b-container v-if="selectedLocation" class="mw-100 mt-3 m-0">
             <b-row>
                 <b-col cols="8" class="p-0 pr-1">
-                    <b-card class="w-100">
-                        <template #header>
-                            <div class="d-flex justify-content-between">
-                                <h4>Signatures</h4>
-                                <div>
-                                    <b-input v-model="search" placeholder="Search..."></b-input>
-                                </div>
-                            </div>
-                        </template>
-
-                        <b-table
-                                :sort-by.sync="sortBy"
-                                :sort-desc.sync="sortDesc"
-                                striped :fields="signatureFields" hover small
-                                :items="filteredSignatures">
-                            <template #cell(percent)="{value}">
-                                <div :style="`border-radius: 50%; width: 10px; height: 10px; background-color: var(--${value.match(new RegExp('100')) ? 'green' : 'red'})`"></div>
-                            </template>
-                            <template #cell(type)="row">
-                                <div @contextmenu.capture.prevent="() => {
-                                    focusedSignature = row.item;
-                                    $refs.sigTypeMenu.open($event);
-                                    }" class="sig-item">{{row.item.type}}</div>
-                            </template>
-                            <template #cell(name)="{value, index}">
-                                {{value}}
-                            </template>
-                            <template #cell(leads)="row">
-                                <div @contextmenu.stop.prevent="() => {
-                                    focusedSignature = row.item
-                                    $refs.leadsToMenu.open($event)
-                                    }">
-                                    {{row.item.type == 'Wormhole' ? systemName(row.item.leads) || '--------' : ''}}
-                                </div>
-                            </template>
-                            <template #cell(created)="{value}">
-                                <timeago :datetime="new Date(value)" :auto-update="1"></timeago>
-                            </template>
-                            <template #cell(updated)="{value}">
-                                <timeago :datetime="new Date(value)" :auto-update="1"></timeago>
-                            </template>
-                            <template #cell(options)="{index}">
-                                <b-icon-trash class="delete" @click="deleteSig(index)">Delete</b-icon-trash>
-                            </template>
-                        </b-table>
-                    </b-card>
+                    <LocationSignatures />
                 </b-col>
                 <b-col cols="4" class="p-0 pl-1">
-                    <b-card>
-                        <template #header>
-                            <h4>{{selectedLocation.name}}
-                                <a target="_blank" :href="`https://evemaps.dotlan.net/system/${selectedLocation.name}`"
-                                   v-b-tooltip.hover title="dotlan">
-                                    <img
-                                            class="ml-1 mr-1 icon-hover"
-                                            style="height: 20px; width:20px"
-                                            src="../assets/logo_dotlan.png"/></a>
-                                <a target="_blank" :href="`https://anoik.is/systems/${selectedLocation.name}`"
-                                   v-b-tooltip.hover title="Anoik.is">
-                                    <img class="ml-1 mr-1 icon-hover"
-                                         style="height: 20px; width:20px"
-                                         src="../assets/logo_anoik.png"/></a>
-                                <a target="_blank" :href="`https://zkillboard.com/system/${selectedLocation.system_id}`"
-                                   v-b-tooltip.hover title="zKillboard">
-                                    <img
-                                            class="ml-1 mr-1 icon-hover"
-                                            style="height: 20px; width:20px"
-                                            src="../assets/logo_zkill.png"/></a>
-                                         </h4>
-                        </template>
-                        <b-container>
-                            <div>
-                            <div v-for="st in selectedLocation.statics" :key="st.code" style="float: left; margin: 0 0.5rem;">
-                                <SecurityDisplay :security="st.goes">
-                                    <template v-slot="{securityColor}">
-                                        <h6 style="color: white;">   {{st.code}}: <span :style="{color: securityColor}">{{st.goes}}   </span></h6>
-                                    </template>
-                                </SecurityDisplay>
-                            </div>
-                            </div>
-                        </b-container>
-                    </b-card>
-                    <b-card class="mt-3">
-                        <template #header>
-                            <h4>Pilots</h4>
-                        </template>
-                        <b-container>
-                            <table class="pilots" style="width: 100%;">
-                                <tr :key="pilot.CharacterName" v-for="pilot in locationPilots">
-                                    <td class="item"
-                                        style="color: 'inherit'; width: 40%;">
-                                        {{pilot.CharacterName}}
-                                    </td>
-                                    <td class="item" style="color: var(--yellow); width: 40%;" v-if="pilot.ship">{{pilot.ship.ship_name}}</td>
-                                    <td class="item" style="color: var(--orange); width: 20%;" v-if="pilot.ship">{{pilot.ship.type}}</td>
-                                </tr>
-                            </table>
-                        </b-container>
-                    </b-card>
-                    <b-card class="mt-3">
-                        <template #header>
-                            <h4>Routes
-                                <a class="green float-right ml-2" @click.prevent="$bvModal.show('add-route-modal')"
-                                   href="#"
-                                   v-b-tooltip.hover title="Add">
-                                    <b-icon-plus-circle class="icon-hover"></b-icon-plus-circle>
-                                </a>
-                            </h4>
-                        </template>
-                        <b-container>
-                            <b-table
-                                    striped :fields="routeFields" hover small
-                                    :items="routes" @row-clicked="routeClick">
-                                <template #cell(systems)="{value}">
-                                    <div v-if="typeof value === 'string'">No Route Found</div>
-                                    <Security v-else :security="system.security_status" :key="system.system_id"
-                                              v-for="system in value">
-                                        <template v-slot="{securityColor}">
-                                            <a v-if="system.type === 'WH'" v-b-tooltip.hover :title="system.name + ' (' + system.connection_size + ')'">
-                                                <b-icon-distribute-vertical class="ml-1" :style="{color: sizeColor(system.connection_size)}"></b-icon-distribute-vertical>
-                                            </a>
-                                            <a v-else v-b-tooltip.hover
-                                               :title="system.name + ' (' + Math.floor(system.security_status * 10) / 10 +')'">
-                                                <b-icon-square-fill v-if="system.type === 'K'" :style="{color: securityColor}"
-                                                                    class="ml-1"></b-icon-square-fill>
-                                                <b-icon-plus-circle-fill v-else :style="{color: securityColor}"
-                                                                    class="ml-1"></b-icon-plus-circle-fill>
-                                            </a>
-                                        </template>
-                                    </Security>
-                                </template>
-                                <template #cell(options)="{index}">
-                                    <b-icon-trash class="delete" @click="removeRoute(index)">Delete</b-icon-trash>
-                                </template>
-                            </b-table>
-                        </b-container>
-                    </b-card>
-                    <b-card class="mt-3">
-                        <template #header>
-                            <h4>Recent Kills (last 24h)</h4>
-                        </template>
-                        <b-container>
-                            <table class="killmails" style="width: 100%;">
-                                <tr>
-                                    <th class="km-header">Victim</th>
-                                    <th class="km-header" style="text-align: center;">Killmail</th>
-                                    <th class="km-header" style="text-align: right;">Attacker</th>
-                                </tr>
-                                <tr :key="kill.killmail_id" v-for="kill in selectedLocation.kills">
-                                    <td class="km-row" style="width: 40%; text-align: right;">
-                                        <a v-b-tooltip.hover
-                                            :title="kill.victim.corporation.name"
-                                            :href="`https://zkillboard.com/corporation/${kill.victim.corporation.id}/`">
-                                            <img class="ml-1 mr-1 icon-hover km-thumb"
-                                            :src="`https://images.evetech.net/corporations/${kill.victim.corporation.id}/logo?size=64`"/>
-                                        </a>
-                                        <a v-b-tooltip.hover
-                                            :title="kill.victim.character.name"
-                                            :href="`https://zkillboard.com/character/${kill.victim.character.id}/`">
-                                            <img class="ml-1 mr-1 icon-hover km-thumb"
-                                            :src="`https://images.evetech.net/characters/${kill.victim.character.id}/portrait?size=64`"/>
-                                        </a>
-                                        <a v-b-tooltip.hover
-                                            :title="kill.victim.inventory_type.name"
-                                            :href="`https://zkillboard.com/ship/${kill.victim.inventory_type.id}/`">
-                                            <img class="ml-1 mr-1 icon-hover km-thumb"
-                                            :src="`https://images.evetech.net/types/${kill.victim.inventory_type.id}/render?size=64`"/>
-                                        </a>
-                                    </td>
-                                    <td style="color: var(--yellow); width: 10%; text-align: center;">
-                                        <a v-b-tooltip.hover
-                                            title="Killmail"
-                                            :href="`https://zkillboard.com/kill/${kill.killmail_id}/`">
-                                            <i class="fas fa-skull-crossbones fa-3x" style="color: #a52521"></i>
-                                        </a>
-                                    </td>
-                                    <td class="km-row" style="color: var(--orange); width: 40%;" v-if="kill.attackers.faction">
-                                        <a v-b-tooltip.hover
-                                            :title="`${kill.attackers.inventory_type.name} - ${kill.attackers.faction.name}`"
-                                            :href="`https://zkillboard.com/ship/${kill.attackers.inventory_type.id}/`">
-                                            <img class="ml-1 mr-1 icon-hover km-thumb"
-                                            :src="`https://images.evetech.net/types/${kill.attackers.inventory_type.id}/render?size=64`"/>
-                                        </a>
-                                    </td>
-                                    <td class="km-row" style="color: var(--orange); width: 40%;" v-else>
-                                        <a v-b-tooltip.hover
-                                            :title="kill.attackers.inventory_type.name"
-                                            :href="`https://zkillboard.com/ship/${kill.attackers.inventory_type.id}/`">
-                                            <img class="ml-1 mr-1 icon-hover km-thumb"
-                                            :src="`https://images.evetech.net/types/${kill.attackers.inventory_type.id}/render?size=64`"/>
-                                        </a>
-                                        <a v-b-tooltip.hover
-                                            :title="kill.attackers.character.name"
-                                            :href="`https://zkillboard.com/character/${kill.attackers.character.id}/`">
-                                            <img class="ml-1 mr-1 icon-hover km-thumb"
-                                            :src="`https://images.evetech.net/characters/${kill.attackers.character.id}/portrait?size=64`"/>
-                                        </a>
-                                        <a v-b-tooltip.hover
-                                            :title="kill.attackers.corporation.name"
-                                            :href="`https://zkillboard.com/corporation/${kill.attackers.corporation.id}/`">
-                                            <img class="ml-1 mr-1 icon-hover km-thumb"
-                                            :src="`https://images.evetech.net/corporations/${kill.attackers.corporation.id}/logo?size=64`"/>
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
-                        </b-container>
-                    </b-card>
+                    <LocationHeader />
+                    <LocationPilots />
+                    <LocationRoutes />
+                    <RecentKills />
                 </b-col>
             </b-row>
         </b-container>
@@ -309,76 +55,7 @@
                     ></b-form-input>
                 </b-form-group>
             </form>
-        </b-modal>
-        <b-modal id="add-route-modal" centered title="Add System" @ok="addRoute">
-            <form ref="form" @submit.prevent>
-                <b-form-group
-                        label="Name"
-                        label-for="name-input"
-                        invalid-feedback="Name is required"
-                >
-                    <b-form-input
-                            id="name-input"
-                            v-model="routeName"
-                            required
-                            @keydown.enter="addRoute"
-                    ></b-form-input>
-                </b-form-group>
-                <b-form-group
-                        label="Flag"
-                        label-for="name-input"
-                        invalid-feedback="Flag is required"
-                >
-                    <b-select v-model="routeFlag">
-                        <b-select-option value="shortest">Shortest</b-select-option>
-                        <b-select-option value="secure">Secure</b-select-option>
-                        <b-select-option value="insecure">Insecure</b-select-option>
-                    </b-select>
-                </b-form-group>
-            </form>
-        </b-modal>
-        <b-modal id="set-connection-status-modal" centered title="Connection Status" @ok="setConnectionStatus">
-            <form ref="form">
-                <b-form-group
-                        label="Status"
-                        invalid-feedback="Status is required"
-                >
-                    <b-select v-model="focusedConnection.status">
-                        <b-select-option :value="1">Stage 1 (Fresh)</b-select-option>
-                        <b-select-option :value="2">Stage 2 (Reduced)</b-select-option>
-                        <b-select-option :value="3">Stage 3 (Critical)</b-select-option>
-                    </b-select>
-                </b-form-group>
-            </form>
-        </b-modal>
-        <b-modal id="set-connection-size-modal" centered title="Connection Size" @ok="setConnectionSize">
-            <form ref="form">
-                <b-form-group
-                        label="Status"
-                        invalid-feedback="Size is required"
-                >
-                    <b-select v-model="focusedConnection.size">
-                        <b-select-option value="?" disabled>Unknown (?)</b-select-option>
-                        <b-select-option value="S">Smallest Ships (S)</b-select-option>
-                        <b-select-option value="M">Medium Ships (M)</b-select-option>
-                        <b-select-option value="L">Larger Ships (L)</b-select-option>
-                        <b-select-option value="XL">Capital Ships (XL)</b-select-option>
-                    </b-select>
-                </b-form-group>
-            </form>
-        </b-modal>
-        <b-modal id="set-leadsto-system-modal" centered title="Leads To:" @ok="setLeadsToSystem">
-            <form ref="form">
-                <b-form-group
-                        label="Connection"
-                        invalid-feedback="Connection is required"
-                >
-                    <b-select v-if="selectedLocation" v-model="focusedSignature.leads">
-                        <b-select-option v-for="connection in connectionsToID(selectedLocation.system_id)" :value="connection" :key="connection">{{systemName(connection)}}</b-select-option>
-                    </b-select>
-                </b-form-group>
-            </form>
-        </b-modal>
+        </b-modal>    
     </div>
 </template>
 
@@ -391,10 +68,16 @@
     import SigPaster from "../mixins/SigPaster";
     import SecurityDisplay from "../components/map/SecurityDisplay";
     import Security from "../components/map/Security";
+    import RecentKills from "../components/panels/RecentKills";
+    import LocationRoutes from "../components/panels/LocationRoutes";
+    import LocationPilots from "../components/panels/LocationPilots"
+    import LocationSignatures from "../components/panels/LocationSignatures"
+    import LocationHeader from "../components/panels/LocationHeader"
+    import MapConnection from "../components/map/MapConnection"
 
     export default {
         name: "Map",
-        components: {Security, SecurityDisplay, ContextMenu, Loading, MapLocation},
+        components: {Security, SecurityDisplay, ContextMenu, Loading, MapLocation, MapConnection, RecentKills, LocationRoutes, LocationPilots, LocationSignatures, LocationHeader},
         mixins: [SigPaster],
         directives: {
             resize,
@@ -406,99 +89,19 @@
         },
         data() {
             return {
-                sortBy: 'code',
-                sortDesc: false,
-                search: "",
                 isDragging: false,
                 loading: false,
-                overConnection: {},
-                highlightedConnections: [],
-                highlightedLocations: [],
                 mapOffsetX: 0,
                 mapOffsetY: 0,
                 name: "J160941",
-                routeName: "J160941",
-                routeFlag: "shortest",
                 isLinking: false,
                 startLinkLocation: null,
-                focusedConnection: {
-                    status: 0,
-                    size: "?"
-                },
-                focusedSignature: {},
                 mappedConnections: [],
                 link: null,
-                sigGroup: [
-                    "Ore Site", "Combat Site", 'Data Site', 'Relic Site', 'Gas Site', 'Wormhole'
-                ],
-                routeFields: [
-                    {
-                        key: 'destination.name',
-                        label: "Destination",
-                        tdClass: "d-flex align-items-center justify-content-center"
-                    }
-                    , {
-                        key: 'flag',
-                        label: "Flag",
-                        tdClass: "text-capitalize"
-                    }, {
-                        key: 'systems',
-                        label: "Route",
-                    },
-                    {
-                        key: 'options',
-                        label: "",
-                        tdClass: "d-flex align-items-center justify-content-center"
-                    }
-                ],
-                signatureFields: [
-                    {
-                        key: 'percent',
-                        label: "",
-                        tdClass: "d-flex align-items-center justify-content-center"
-                    }, {
-                        key: 'code',
-                        tdClass: 'code-size',
-                        sortable: true
-                    }, {
-                        key: 'type',
-                        tdClass: 'text-center',
-                        sortable: true
-                    }, {
-                        key: 'name',
-                        tdClass: 'text-center',
-                        sortable: true
-                    }, {
-                        key: 'leads',
-                        label: 'Leads to:',
-                        tdClass: 'text-center',
-                        sortable: true
-                    }, {
-                        key: 'created',
-                        tdClass: 'text-center',
-                        sortable: true
-                    }, {
-                        key: 'updated',
-                        tdClass: 'text-center',
-                        sortable: true
-                    }, {
-                        key: 'options',
-                        label: "",
-                        tdClass: 'text-center'
-                    }
-                ]
             };
         },
         computed: {
-            ...mapGetters(['map', 'connections', 'selectedLocation', 'routes', 'mapScroll', 'pilots']),
-            filteredSignatures() {
-                if (this.search !== "") {
-                    return this.selectedLocation.signatures.filter(val => val.code.search(new RegExp(this.search, "i")) !== -1);
-                } else return this.selectedLocation.signatures;
-            },
-            locationPilots() {
-                return this.pilots[this.selectedLocation.system_id];
-            },
+            ...mapGetters(['map', 'connections', 'selectedLocation', 'routes', 'mapScroll', 'pilots', 'highlightedConnections', 'highlightedLocations']),
         },
         async created() {
             window.addEventListener('paste', this.handlePaste);
@@ -555,98 +158,9 @@
                     return '#888';
                 }
             },
-            connectionsToID(id) {
-                return this.connections.filter(conn => conn.from == id || conn.to == id).map(connection => {
-                    return connection.to == id ? connection.from : connection.to
-                })
-            },
-            systemName(id) {
-                const loc = this.map.locations.find(loc => loc.system_id == id)
-                return loc ? loc.alias || loc.name : null
-            },
-            setLeadsToSystem() {
-                const idx = this.selectedLocation.signatures.findIndex(sig => sig.code === this.focusedSignature.code)
-                this.selectedLocation.signatures[idx] = this.focusedSignature
-                this.saveSelectedLocation()
-            },
-            saveSelectedLocation() {
-                this.$store.dispatch("updateLocation", {
-                    location: this.selectedLocation
-                });
-            },
-            async removeRoute(index) {
-                const route = this.routes[index];
-                await this.$store.dispatch('removeRoute', {name: route.destination.system_id, flag: route.flag});
-                await this.$store.dispatch('getRoutes', {origin: this.selectedLocation.system_id});
-            },
-            async addRoute() {
-                await this.$store.dispatch('addRoute', {name: this.routeName, flag: this.routeFlag});
-                await this.$store.dispatch('getRoutes', {origin: this.selectedLocation.system_id});
-            },
             selectLocation(location) {
                 this.$store.commit('setSelectedLocation', {...location, kills: []});
                 this.$store.dispatch('getKills', location);
-            },
-            outerConnectionStyle(connection) {
-                var stroke = this.overConnection.from === connection.from && this.overConnection.to === connection.to ? 'var(--white)' : connection.eol ? 'var(--purple)' : '#666'
-                var strokeW = '10'
-                if (this.highlightedConnections.includes(connection.key)) {
-                    stroke = '#ffb10f'
-                    strokeW = '15'
-                }
-                return {
-                    stroke: stroke,
-                    'stroke-width': strokeW,
-                    fill: 'none'
-                };
-            },
-            innerConnectionStyle(connection) {
-                var stroke = connection.status === 1 ? 'var(--path-stroke)' : connection.status === 2 ? 'var(--orange)' : 'var(--red)'
-                if (this.highlightedConnections.includes(connection.key)) {
-                    stroke = 'var(--orange)'
-                }
-                return {
-                    stroke: stroke,
-                    'stroke-width': '5',
-                    fill: 'none'
-                };
-            },
-            connectionDashArray(size) {
-                switch (size) {
-                    case 'S':
-                        return '5 10';
-                    case 'M':
-                        return '15 10';
-                    case 'L':
-                        return '25 10';
-                    default:
-                        return '35 10';
-                }
-            },
-            enterConnection(connection) {
-                this.overConnection = connection;
-            },
-            leaveConnection() {
-                this.overConnection = {};
-            },
-            setConnectionSize() {
-                this.$store.dispatch('updateConnection', {
-                    ...this.focusedConnection,
-                });
-                const idx = this.mappedConnections.findIndex(conn => conn.key == this.focusedConnection.key)
-                this.mappedConnections[idx].size = this.focusedConnection.size
-            },
-            setConnectionStatus() {
-                this.$store.dispatch('updateConnection', {
-                    ...this.focusedConnection,
-                });
-            },
-            toggleEOL() {
-                this.$store.dispatch('updateConnection', {
-                    ...this.focusedConnection,
-                    eol: !this.focusedConnection.eol,
-                    eol_time: this.focusedConnection.eol?null:new Date()
-                });
             },
             calculateMappedConnections() {
                 if (this.$refs.location) {
@@ -780,13 +294,6 @@
                 };
                 window.addEventListener('mousemove', this.updateLink);
             },
-            setSigType(event) {
-                console.log(event.srcElement.outerText)
-                this.focusedSignature.type = event.srcElement.outerText.trim()
-                const idx = this.selectedLocation.signatures.findIndex(sig => sig.code === this.focusedSignature.code)
-                this.selectedLocation.signatures[idx] = this.focusedSignature
-                this.saveSelectedLocation()
-            },
             async endLink(location) {
                 if (this.isLinking) {
                     const fromID = this.startLinkLocation.system_id;
@@ -820,41 +327,11 @@
                     this.isLinking = false;
                 }
             },
-            async unlink() {
-                await this.$store.dispatch('deleteConnection', {
-                    connection: this.focusedConnection
-                })
-            },
-            routeClick(row, idx) {
-                this.highlightedConnections = row.systems.filter(sys => sys.type == "WH").map(sys => sys.key)
-                this.highlightedLocations = row.systems.filter(sys => sys.type == "K" || sys.type == "J").map(sys => sys.system_id)
-                console.log('high loc:',this.highlightedLocations)
-                console.log('high conn:',this.highlightedConnections)
-                setTimeout(() => {
-                    window.addEventListener('click', this.clearHighlight);
-                }, 500)
-            },
-            clearHighlight() {
-                this.highlightedConnections = []
-                this.highlightedLocations = []
-                window.removeEventListener('click', this.clearHighlight);
-            }
         }
     };
 </script>
 
 <style scoped lang="scss">
-.km-header {
-    border-bottom: 1px solid black;
-}
-.km-row {
-    height: 74px;
-    min-width: 180px;
-}
-.km-thumb {
-    height: 50px; width:50px;
-}
-
 .card-small {
     min-width: 600px;
 }
@@ -864,16 +341,6 @@
     height: 75vh;
     overflow: auto;
     border: 1px solid rgba(0, 0, 0, 0.5);
-
-    .lines {
-        position: absolute;
-        height: 1000px;
-        width: 2000px;
-
-        .path-outer {
-            stroke: red !important;
-        }
-    }
 }
 
 .icon-hover {
@@ -883,40 +350,6 @@
     &:hover {
         transform: scale(1.1);
     }
-}
-
-.path {
-    transition: stroke 150ms ease-in-out;
-    cursor: pointer;
-}
-
-
-.delete {
-    color: var(--red);
-
-    &:hover {
-        color: red
-    }
-}
-
-.connection-size {
-    position: absolute;
-    background-color: var(--dark);
-    width: 1.5rem;
-    height: 1.5rem;
-    text-align: center;
-    border-radius: 5px;
-    user-select: none;
-    cursor: pointer;
-}
-.pilots {
-    .item {
-        font-size: 0.8rem;
-    }
-}
-
-.sig-item {
-    min-height: 18px;
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px;}
