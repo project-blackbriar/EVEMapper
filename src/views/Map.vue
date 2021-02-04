@@ -31,6 +31,7 @@
             <b-row>
                 <b-col cols="8" class="p-0 pr-1">
                     <LocationSignatures />
+                    <SovCampaigns />
                 </b-col>
                 <b-col cols="4" class="p-0 pl-1">
                     <LocationHeader />
@@ -74,10 +75,11 @@
     import LocationSignatures from "../components/panels/LocationSignatures"
     import LocationHeader from "../components/panels/LocationHeader"
     import MapConnection from "../components/map/MapConnection"
+    import SovCampaigns from "../components/panels/SovCampaigns"
 
     export default {
         name: "Map",
-        components: {Security, SecurityDisplay, ContextMenu, Loading, MapLocation, MapConnection, RecentKills, LocationRoutes, LocationPilots, LocationSignatures, LocationHeader},
+        components: {Security, SecurityDisplay, ContextMenu, Loading, MapLocation, MapConnection, RecentKills, LocationRoutes, LocationPilots, LocationSignatures, LocationHeader, SovCampaigns},
         mixins: [SigPaster],
         directives: {
             resize,
