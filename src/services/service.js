@@ -26,7 +26,7 @@ class Service {
             await store.dispatch('updateToken', {...response.data});
         } catch (ex) {
             console.log(ex);
-            if (ex.response.status === 403) {
+            if (ex.response?.status === 403) {
                 await router.push({name: 'Logout'});
             }
         }

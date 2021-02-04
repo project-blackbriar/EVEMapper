@@ -172,9 +172,9 @@
                         left: {x: -bDelta, y: 0},
                     };
                     this.mappedConnections = this.connections.map(connection => {
-                        const startEl = this.$refs.location.find(val => val.location.system_id === connection.from).$el;
-                        const endEl = this.$refs.location.find(val => val.location.system_id === connection.to).$el;
-                        if (endEl == null) {
+                        const startEl = this.$refs.location.find(val => val.location.system_id === connection.from)?.$el;
+                        const endEl = this.$refs.location.find(val => val.location.system_id === connection.to)?.$el;
+                        if (endEl == null || startEl == null) {
                             return {
                                 start: null,
                                 end: null,

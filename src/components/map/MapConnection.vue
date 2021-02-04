@@ -38,6 +38,19 @@
     >
       {{ connection.size }}
     </div>
+    <div
+      class="connection-eoltime"
+      v-if="connection.eol && isMouseOver"
+      @mouseleave="leaveConnection"
+      @mouseenter="enterConnection"
+      :style="
+        `top: ${connection.middle.y +15 }px; left: ${connection.middle.x -
+          21}px;`
+      "
+      @contextmenu.stop.prevent="$refs.connectionMenu.open($event)"
+    >
+      {{ eoltime }}
+    </div>
 
     <ContextMenu
       ref="connectionMenu"
@@ -107,6 +120,7 @@ export default {
   data() {
     return {
       isMouseOver: false,
+      eoltime: "",
     };
   },
   methods: {
@@ -157,6 +171,12 @@ export default {
     },
     enterConnection() {
       this.isMouseOver = true;
+      // Show EOL time
+      if (this.connection.eol && this.connection.eol_time) {
+        const eoltime = new Date(this.connection.eol_time)
+        const nowtime = new Date()
+        this.eoltime = new Date(nowtime - eoltime).toISOString().substr(11, 5)
+      }
     },
     leaveConnection() {
       this.isMouseOver = false;
@@ -209,6 +229,17 @@ export default {
   position: absolute;
   background-color: var(--dark);
   width: 1.5rem;
+  height: 1.5rem;
+  text-align: center;
+  border-radius: 5px;
+  user-select: none;
+  cursor: pointer;
+}
+.connection-eoltime {
+  position: absolute;
+  background-color: var(--dark);
+  color: var(--purple);
+  width: 3rem;
   height: 1.5rem;
   text-align: center;
   border-radius: 5px;
