@@ -2,7 +2,6 @@
     <Loading v-if="loading"/>
     <div v-else v-resize:debounce="resetSize">
         <div id="map" class="map light" @click="resetFocus" @contextmenu.capture.prevent="$refs.menu.open">
-            <MapConnection v-for="connection in mappedConnections" :key="connection.key" :connection="connection" />
             <svg class="lines2">
                 <line
                     v-if="link"
@@ -13,6 +12,7 @@
                     style="stroke:rgba(255, 255, 255, 0.5);stroke-width:6"
                 ></line>
             </svg>
+            <MapConnection v-for="connection in mappedConnections" :key="connection.key" :connection="connection" />
             <MapLocation ref="location" class="selectable" :map-offset-x="mapOffsetX" :map-offset-y="mapOffsetY"
                          v-for="location in map.locations"
                          :location="location" :key="location.name"
@@ -334,6 +334,12 @@
 <style scoped lang="scss">
 .card-small {
     min-width: 600px;
+}
+
+.lines2 {
+  position: absolute;
+  height: 1000px;
+  width: 2000px;
 }
 
 .map {

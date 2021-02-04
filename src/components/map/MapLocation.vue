@@ -13,6 +13,7 @@
                 <SecurityDisplay :security="location.security">
                     <template v-slot="{securityColor}">
                         <h4 :style="{color: securityColor}">{{location.security}}</h4>
+                        <b-icon-lock-fill style="color: #888" v-if="location.locked" scale="0.8"/>
                     </template>
                 </SecurityDisplay>
                 <EffectsDisplay v-if="location.effect" :effect="location.effect">
@@ -123,6 +124,7 @@
                         click: () => this.$emit('startLink', this.location),
                         class: "remove",
                     },
+                    {title: 'Lock', endIcon: 'lock-fill', click: this.toggleLocked, class: "remove",},
                     {title: 'Rally Point', endIcon: 'exclamation-diamond-fill', click: this.toggleRally, class: "remove",},
                     {title: 'Remove', endIcon: 'trash', click: this.remove, class: "remove",},
                     {title: 'Remove Chain', endIcon: 'trash', click: this.removeChain, class: "remove",},
@@ -271,7 +273,11 @@
                 }).join(' ');
             },
             toggleRally() {
-                this.location.rally == !this.location.rally;
+                this.location.rally = !this.location.rally;
+                this.$store.dispatch('updateLocation', {location: this.location});
+            },
+            toggleLocked() {
+                this.location.locked = !this.location.locked;
                 this.$store.dispatch('updateLocation', {location: this.location});
             }
 
