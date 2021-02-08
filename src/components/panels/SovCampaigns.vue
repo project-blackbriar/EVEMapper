@@ -18,7 +18,7 @@
         </div>
       </template>
       <template #cell(start_time)="{value}">
-        {{ value }}
+        <timeago :datetime="new Date(value)" :auto-update="1"></timeago>
       </template>
       <template #cell(event_type)="{value}">
         {{ value }}
@@ -116,6 +116,7 @@ export default {
               const distance = route ? `${route.data.length} Jumps` : 'No Route'
               processed = {
                 ...item,
+                event_type: this.toCapitalizedWords(item.event_type),
                 defender: res.data[0],
                 location: res.data[1],
                 distance: distance
@@ -143,6 +144,13 @@ export default {
       await this.$store.dispatch("getRoutes", {
         origin: this.selectedLocation.system_id,
       });
+    },
+    toCapitalizedWords(name) {
+        var words = name.match(/[A-Za-z][a-z]*/g) || [];
+        return words.map(this.capitalize).join(" ");
+    },
+    capitalize(word) {
+      return word.charAt(0).toUpperCase() + word.substring(1);
     }
   },
 };
