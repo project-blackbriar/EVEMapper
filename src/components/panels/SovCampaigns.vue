@@ -10,8 +10,10 @@
       <template #cell(location)="{value}">
         {{ value.name }}
       </template>
-      <template #cell(distance)="{value}">
-        {{ value }}
+      <template #cell(distance)="{index, value}">
+        <div @click="plotRoute(index)">
+          {{ value }}
+        </div>
       </template>
       <template #cell(start_time)="{value}">
         {{ value }}
@@ -80,7 +82,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["selectedLocation"]),
+    ...mapGetters(["selectedLocation", 'connections']),
   },
   watch: {
     selectedLocation() {
@@ -97,18 +99,30 @@ export default {
               const ids = [item.defender_id, item.solar_system_id];
               var processed = {};
               const res = await ESI.post(`universe/names/`, ids);
-              console.log(res.data)
-              
+              const flag = 'shortest'
+              let route
+              try {
+                route = await ESI.get(`/route/${this.selectedLocation.system_id}/${item.solar_system_id}/`, {
+                    params: {
+                        flag,
+                        connections: this.connections.map(con => `${con.from}|${con.to},${con.to}|${con.from}`).join(',')
+                    }
+                })
+              } catch (err) {
+                console.log(err.message)
+              }
+              console.log(route)
+              const distance = route ? `${route.data.length} Jumps` : 'No Route'
               processed = {
                 ...item,
                 defender: res.data[0],
-                location: res.data[1]
+                location: res.data[1],
+                distance: distance
               };
               return processed;
             })
           );
           this.campaigns = camps;
-          console.log(this.campaigns);
         }
       );
     },
@@ -119,6 +133,9 @@ export default {
       if (defender.category === 'corporation') {
         window.open(`https://zkillboard.com/corporation/${defender.id}`, "_blank"); 
       }
+    },
+    plotRoute(row) {
+      console.log('Destination:', this.campaigns[row].location.name)
     }
   },
 };
