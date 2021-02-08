@@ -80,6 +80,7 @@ class Service {
 
     async updateLocation(mapId, location) {
         await this.checkToken();
+        delete location.kills
         return (await this.api.put(`/maps/${mapId}/location`, location, {
             params: {
                 token: store.getters.auth.access_token,
