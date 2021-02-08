@@ -14,6 +14,14 @@ export default {
     },
     actions: {
         async addRoute({commit, rootState, dispatchs}, {name, flag}) {
+            const exists = rootState.user.routes.find(route => {return route.destination.name === name && route.flag == flag})
+            if (exists) {
+                VueInstance.$bvToast.toast('Route already exists', {
+                    title: 'System',
+                    variant: 'danger'
+                })
+                return
+            }
             const ids = await eveService.getUniverseIds([name]);
             if (ids.systems?.length > 0) {
                 const systemId = ids.systems[0].id;
