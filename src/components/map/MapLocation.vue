@@ -13,7 +13,7 @@
                 <SecurityDisplay :security="location.security">
                     <template v-slot="{securityColor}">
                         <h4 :style="{color: securityColor}">{{location.security}}</h4>
-                        <b-icon-lock-fill style="color: #888" v-if="location.locked" scale="0.8"/>
+                        <b-icon-lock-fill class="lock" v-if="location.locked" scale="0.8"/>
                     </template>
                 </SecurityDisplay>
                 <EffectsDisplay v-if="location.effect" :effect="location.effect">
@@ -322,17 +322,24 @@
 
     }
 
+    .lock {
+        color: #888;
+        margin: 0;
+        padding: 0;
+        font-size: 14px;
+    }
 
     .header {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        font-size: 0px;
         width: 100%;
         height: 100%;
         cursor: pointer;
 
         h4 {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             margin-bottom: 0;
         }
 
