@@ -7,11 +7,13 @@
     </template>
 
     <b-table striped :fields="tableFields" hover small :items="campaigns">
-      <template #cell(location)="{value}">
+      <template #cell(location)="{index, value}">
+        <div @click="plotRoute(value.name)">
         {{ value.name }}
+        </div>
       </template>
-      <template #cell(distance)="{index, value}">
-        <div @click="plotRoute(index)">
+      <template #cell(distance)="{index, value, item}">
+        <div @click="plotRoute(item.location.name)">
           {{ value }}
         </div>
       </template>
@@ -111,7 +113,6 @@ export default {
               } catch (err) {
                 console.log(err.message)
               }
-              console.log(route)
               const distance = route ? `${route.data.length} Jumps` : 'No Route'
               processed = {
                 ...item,
@@ -134,8 +135,14 @@ export default {
         window.open(`https://zkillboard.com/corporation/${defender.id}`, "_blank"); 
       }
     },
-    plotRoute(row) {
-      console.log('Destination:', this.campaigns[row].location.name)
+    async plotRoute(destination) {
+      await this.$store.dispatch("addRoute", {
+        name: destination,
+        flag: 'shortest',
+      });
+      await this.$store.dispatch("getRoutes", {
+        origin: this.selectedLocation.system_id,
+      });
     }
   },
 };
