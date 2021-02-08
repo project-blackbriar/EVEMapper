@@ -81,7 +81,7 @@ export default {
         },
         async getKills({commit, getters}, system) {
             const response = await eveService.ZKAPI.get(`kills/solarSystemID/${system.system_id}/pastSeconds/86400/`);
-            const kills = await Promise.all(response.data.map(async kill => {
+            var kills = await Promise.all(response.data.map(async kill => {
                 const km = await eveService.ESI.get(`killmails/${kill.killmail_id}/${kill.zkb.hash}/?datasource=tranquility`)
                 const victimIds = [
                     km.data.victim.character_id,
@@ -125,6 +125,8 @@ export default {
                     }
                 }
             }))
+            // Deduplicate kills array (Grrr, zKill! Grrrr!)
+            kills = kills.filter((km, idx) => {return kills.indexOf(km) === idx})
             commit('setLocationKills', kills)
         }
     },
