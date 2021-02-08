@@ -81,7 +81,7 @@ export default {
         },
         async getKills({commit, getters}, system) {
             const response = await eveService.ZKAPI.get(`kills/solarSystemID/${system.system_id}/pastSeconds/86400/`);
-            response.data.forEach(async kill => {
+            const kills = await Promise.all(response.data.map(async kill => {
                 const km = await eveService.ESI.get(`killmails/${kill.killmail_id}/${kill.zkb.hash}/?datasource=tranquility`)
                 const victimIds = [
                     km.data.victim.character_id,
@@ -115,7 +115,7 @@ export default {
                     })
                     return output
                 })
-                commit('addKillToLocation', {
+                return {
                     killmail_id: km.data.killmail_id,
                     killmail_time: km.data.killmail_time,
                     victim: {...victimNames},
@@ -123,8 +123,9 @@ export default {
                         ...attackerNames,
                         count: km.data.attackers.length
                     }
-                })
-            })
+                }
+            }))
+            commit('setLocationKills', kills)
         }
     },
     mutations: {
@@ -141,11 +142,8 @@ export default {
         setSelectedLocation(state, location) {
             state.selectedLocation = location;
         },
-        addKillToLocation(state, kill) {
-            if (!state.selectedLocation.kills) {
-                state.selectedLocation.kills = []
-            }
-            state.selectedLocation.kills.push(kill)
+        setLocationKills(state, kills) {
+            state.selectedLocation.kills = kills
         },
         setMapScroll(state, scroll) {
             state.mapScroll = scroll
