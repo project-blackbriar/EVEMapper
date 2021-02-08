@@ -8,7 +8,7 @@
 
     <b-table striped :fields="tableFields" hover small :items="campaigns">
       <template #cell(location)="{index, value}">
-        <div @click="plotRoute(value.name)">
+        <div @click="locationZkill(value)">
         {{ value.name }}
         </div>
       </template>
@@ -130,11 +130,14 @@ export default {
     },
     defenderZkill(defender) {
       if (defender.category === 'alliance') {
-        window.open(`https://zkillboard.com/alliance/${defender.id}`, "_blank"); 
+        window.open(`https://zkillboard.com/alliance/${defender.id}`, "_blank");
       }
       if (defender.category === 'corporation') {
-        window.open(`https://zkillboard.com/corporation/${defender.id}`, "_blank"); 
+        window.open(`https://zkillboard.com/corporation/${defender.id}`, "_blank");
       }
+    },
+    locationZkill(location) {
+      window.open(`https://zkillboard.com/system/${location.id}`, "_blank");
     },
     async plotRoute(destination) {
       await this.$store.dispatch("addRoute", {
