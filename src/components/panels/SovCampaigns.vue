@@ -20,7 +20,9 @@
         {{ value }}
       </template>
       <template #cell(defender)="{value}">
-        {{ value.name }}
+        <div @click="defenderZkill(value)">
+          {{ value.name }}
+        </div>
       </template>
     </b-table>
   </b-card>
@@ -110,6 +112,14 @@ export default {
         }
       );
     },
+    defenderZkill(defender) {
+      if (defender.category === 'alliance') {
+        window.open(`https://zkillboard.com/alliance/${defender.id}`, "_blank"); 
+      }
+      if (defender.category === 'corporation') {
+        window.open(`https://zkillboard.com/corporation/${defender.id}`, "_blank"); 
+      }
+    }
   },
 };
 </script>
