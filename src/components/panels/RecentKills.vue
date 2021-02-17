@@ -61,10 +61,11 @@
               title="Killmail"
               :href="`https://zkillboard.com/kill/${kill.killmail_id}/`"
             >
-              <i
-                class="fas fa-skull-crossbones fa-3x"
+              <!--<i
+                class="fas fa-skull-crossbones fa-2x"
                 style="color: #a52521"
-              ></i>
+              ></i>-->
+              <timeago style="font-size: 0.8rem; line-height: 0;" :datetime="new Date(kill.killmail_time)" :auto-update="1"></timeago>
             </a>
           </td>
           <td
