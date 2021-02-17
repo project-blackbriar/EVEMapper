@@ -131,6 +131,11 @@ export default {
           tdClass: "text-capitalize",
         },
         {
+          key: "length",
+          label: "Jumps",
+          tdClass: "d-flex align-items-center justify-content-center",
+        },
+        {
           key: "systems",
           label: "Route",
         },

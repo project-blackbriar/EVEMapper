@@ -111,7 +111,7 @@ export default {
                     }
                 })
               } catch (err) {
-                console.log(err.message)
+                console.log('Error while fetching sov campaigns:', err.message)
               }
               const distance = route ? `${route.data.length} Jumps` : 'No Route'
               processed = {

@@ -39,12 +39,13 @@ export default {
             const routes = await service.getRoutes(rootState.map.map._id, origin);
             const procRoutes = []
             routes.forEach((route, ri) => {
-                procRoutes.push({
-                    destination: route.destination,
-                    flag: route.flag,
-                    systems: []
-                })
                 if (route.systems != "No Route Found"){
+                    procRoutes.push({
+                        destination: route.destination,
+                        flag: route.flag,
+                        length: route.systems.length - 1,
+                        systems: []
+                    })
                     route.systems.forEach((system, si) => {
                         procRoutes[ri].systems.push(system)
                         const nextSystem = route.systems[si + 1] ?? null
@@ -72,6 +73,12 @@ export default {
                         }
                     })
                 } else {
+                    procRoutes.push({
+                        destination: route.destination,
+                        flag: route.flag,
+                        length: "-",
+                        systems: []
+                    })
                     procRoutes[ri].systems.push({
                         key: origin + ri,
                         system_id: origin + ri,
