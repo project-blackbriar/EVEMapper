@@ -35,13 +35,10 @@ nano .env
 ```
 `VUE_APP_API_URL` points to where `Mapper-Service` is running, and `VUE_APP_API_CALLBACK` is the callback URL you set up in your ESI app. Do NOT put the Secret Key in this file.
 
-Install nequired Node packages and run development server.
+Install nequired Node packages and compile for production.
 ```
 npm install
 npm run build
 ```
 A `dist` folder will appear, point your webserver to this folder as document root.
 
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
