@@ -5,10 +5,7 @@
                 <b-icon-award></b-icon-award>
             </template>
             <template v-slot:default>
-                {{map.name}}
-            </template>
-            <template v-slot:append v-if="auth.map === map._id ">
-                <span class="red">Active</span>
+                {{map.name}} <i class="far fa-dot-circle" style="color: var(--orange)" v-if="auth.map === map._id "></i>
             </template>
         </SideBarItem>
 

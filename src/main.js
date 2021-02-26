@@ -6,7 +6,7 @@ import {BootstrapVue, BootstrapVueIcons, IconsPlugin} from 'bootstrap-vue';
 import './style.scss';
 import VueSession from 'vue-session';
 import VueSocketIO from "vue-socket.io";
-
+import VueTimeago from 'vue-timeago'
 
 Vue.config.productionTip = false;
 
@@ -15,7 +15,10 @@ Vue.use(IconsPlugin);
 Vue.use(BootstrapVueIcons);
 Vue.use(require('vue-moment'));
 Vue.use(VueSession);
-
+Vue.use(VueTimeago, {
+    name: 'Timeago', // Component name, `Timeago` by default
+    locale: 'en'
+});
 Vue.use(new VueSocketIO({
     debug: true,
     connection: process.env.VUE_APP_API_URL,

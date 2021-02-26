@@ -1,5 +1,5 @@
 <template>
-    <b-card
+    <b-card no-body
             v-show="isVisible"
             class="lil-context-menu"
             :style="style"
@@ -12,9 +12,9 @@
                 'context-menu-item' : true,
                 [child.class] : true
              }" @contextmenu.stop v-for="child in config" @click="child.click">
-            <b-icon :icon="child.icon"/>
-            <span> {{child.title}}</span>
-            <b-icon class="append" :icon="child.endIcon"/>
+            <b-icon v-if="child.icon" :icon="child.icon"/>
+            <span> {{child.title}} </span>
+            <b-icon v-if="child.endIcon" class="append" :icon="child.endIcon"/>
         </div>
     </b-card>
 </template>
@@ -28,7 +28,8 @@
             config: {
                 type: Array,
                 required: true
-            }
+            },
+            inverted: false
         },
         data() {
             return {
@@ -50,8 +51,9 @@
         },
         methods: {
             open(evt, userData) {
-                this.x = evt.pageX || evt.clientX;
-                this.y = evt.pageY || evt.clientY;
+                const offset = this.inverted ? this.config.length * 29 : 0
+                this.x = (evt.pageX || evt.clientX) - window.scrollX;
+                this.y = (evt.pageY || evt.clientY) - window.scrollY - offset;
                 this.userData = userData;
                 Vue.nextTick(() => this.$el.focus());
             },
@@ -73,17 +75,14 @@
     .lil-context-menu {
         position: fixed;
         z-index: 999;
-        min-width: 150px;
-
+        min-width: 120px;
+        font-size: 0.8rem;
 
         .context-menu-item {
             cursor: pointer;
             user-select: none;
-            padding: 10px;
+            padding: 5px 10px;
             border-radius: 2px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
 
             &:hover {
                 background-color: rgba(0, 0, 0, 0.2);

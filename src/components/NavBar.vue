@@ -1,6 +1,6 @@
 <template>
     <b-navbar toggleable="lg" type="dark" variant="dark">
-        <b-navbar-brand :to="{name : 'Home'}">EVE Maps</b-navbar-brand>
+        <b-navbar-brand :to="{name : 'Home'}">Artemis - alpha</b-navbar-brand>
 
 
         <b-collapse id="nav-collapse" is-nav>

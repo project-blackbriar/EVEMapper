@@ -9,6 +9,10 @@ export class CRON {
             start: async () => {
                 this.interval = setInterval(async () => {
                     const location = await this.eveService.getPilotLocation();
+                    if (!location) {
+                        console.log('Error getting pilot location.')
+                        return
+                    }
                     if (!store.getters.location) {
 
                     }
@@ -27,7 +31,6 @@ export class CRON {
         this.statusCron = {
             start: () => {
                 this.interval = setInterval(async () => {
-
                 }, process.env.VUE_APP_EVE_CRON_TIMEOUT);
             },
             stop: () => clearInterval(this.interval)

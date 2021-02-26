@@ -1,9 +1,18 @@
 $dark: #1d1d1d;
 $green: #4f9e4f;
-$text-muted: #FFFFFF2;
+$text-muted: #FFFFFF;
 $orange: #e28a0d;
+$purple: #d747d6;
+$blue: #428bca;
+body {
+  font-family: 'Roboto', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
 :root {
-  --light-dark: #2a2a2a
+
+  --light-dark: #2a2a2a;
+  --path-stroke: rgb(60, 63, 65);
 }
 
 @import '../node_modules/bootstrap/scss/bootstrap';
@@ -40,25 +49,114 @@ $orange: #e28a0d;
   color: var(--orange) !important;
 }
 
+.green {
+  color: var(--green) !important;
+}
+
 .lil-context-menu {
-  background-color: adjust_color($dark, $lightness: 30%) !important;
-  color: adjust_color($light, $lightness: 50%) !important;
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
+}
+
+.code-size {
+  width: 4rem !important;
+  text-align: center;
+}
+
+.cosmictype-size {
+  width: 7rem !important;
+}
+
+.custom-select {
+  font-size: 12px;
+  border: none;
+  color: rgba($white, 0.95);
+  padding: 3px 6px;
+}
+
+.b-table {
+  background-color: adjust_color($dark, $lightness: 7%);
+  color: rgba($white, 0.95);
+  font-size: 12px;
+}
+.form-control {
+  background-color: adjust_color($dark, $lightness: 7%);
+  color: rgba($white, 0.95);
+  font-size: 12px;
+  border-color: $dark;
+
+  &:focus {
+    background-color: adjust_color($dark, $lightness: 6%);
+    color: rgba($white, 0.95);
+    border-color: $dark;
+    box-shadow: 0 0 0 0.2rem $dark;
+  }
+}
+
+
+.table-hover tbody tr:hover {
+  color: rgba($white, 0.95);
+  cursor: pointer;
+}
+
+.table thead th {
+  border-top: var(--dark) 1px solid;
+  border-bottom: var(--dark) 2px solid;
+  text-align: center;
+}
+
+.table {
+  justify-content: center;
+}
+
+.table td {
+  border-top: var(--light-dark) 1px solid;
 }
 
 .card {
   background-color: adjust_color($dark, $lightness: 7%);
   color: rgba($white, 0.95);
 
-  .card-footer {
-    border-top-color: $gray-600;
-    border-top-style: dashed;
+  .card-header {
+    border: none;
   }
 
-  .card-header {
-    border-bottom-color: $gray-600;
-    border-bottom-style: dashed;
+  .card-body {
+    border-top: $gray-600 1px dashed;
   }
 }
+
+
+.close {
+  color: rgba($white, 0.95) !important;
+}
+
+.modal-content {
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
+  border-color: adjust_color($dark, $lightness: 7%);
+
+  .custom-select {
+    background-color: adjust_color($dark, $lightness: 7%);
+    color: rgba($white, 0.95);
+    border-color: adjust_color($dark, $lightness: 7%);
+  }
+
+
+}
+
+.modal-header {
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
+  border-bottom: $gray-600 1px dashed;
+}
+
+.modal-footer {
+  background-color: $dark !important;
+  color: rgba($white, 0.95);
+  border-top: $gray-600 1px dashed;
+}
+
 
 //noinspection CssInvalidPseudoSelector
 :export {

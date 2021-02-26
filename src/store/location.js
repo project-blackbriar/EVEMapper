@@ -8,7 +8,7 @@ export default {
         location: null
     },
     getters: {
-        location: state => state.location
+        location: state => state.location,
     },
     actions: {
         async performLocationChange({commit, rootState}, {newLocation, loading}) {

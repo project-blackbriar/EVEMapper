@@ -1,5 +1,5 @@
 <template>
-    <span>
+    <span style="padding: 0;">
     <slot :securityColor="color"></slot>
     </span>
 

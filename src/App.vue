@@ -3,13 +3,18 @@
         <NavBar></NavBar>
         <div v-if="isLoggedIn" class="container no-margin no-padding">
             <div class="row no-margin no-padding">
-                <div class="col-lg-2 d-sm-none d-lg-block no-margin no-padding">
+                <div class="col-lg-1 d-sm-none d-lg-block no-margin no-padding">
                     <SideBar/>
                 </div>
-                <div class="col-lg-10 no-padding">
+                <div class="col-lg-11 no-padding no-margin">
                     <router-view/>
                 </div>
             </div>
+        </div>
+        <div v-else>
+            <br>
+            <br>
+            <h1 style="text-align: center;">Please Log In ----></h1>
         </div>
     </div>
 </template>
@@ -17,7 +22,7 @@
 <style lang="scss">
     .no-margin {
         margin: 0 !important;
-        width: 100vw;
+        width: 98vw;
     }
 
     .app {

@@ -10,6 +10,10 @@ export default class EveService {
             baseURL: this.eveUrl
         });
         this.service = new Service();
+        this.zkillUrl = 'https://zkillboard.com/api/';
+        this.ZKAPI = axios.create({
+            baseURL: this.zkillUrl
+        });
     }
 
     async checkToken() {
